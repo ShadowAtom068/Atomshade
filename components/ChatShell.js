@@ -1,9 +1,11 @@
 'use client';
 
+import { I } from './Icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatTime } from '../lib/format';
 import Avatar from './Avatar';
+import { IconArchive, IconBellOff, IconChat, IconGear, IconLock, IconLogout, IconNewChat, IconPeople, IconPhone, IconPin, IconShade, IconStatus, IconBack } from './Icons';
 import AtomLogo from './AtomLogo';
 import ChatWindow from './ChatWindow';
 import NewChat from './NewChat';
@@ -26,17 +28,26 @@ import { hasPin } from '../lib/pinlock';
 import NotifyButton from './NotifyButton';
 import SettingsPanel from './SettingsPanel';
 import StarredPanel from './StarredPanel';
+
+// Order of the main sections. Swiping left/right moves along this list, like WhatsApp.
+const TABS = [
+  ['chats', IconChat, 'Chats'],
+  ['updates', IconStatus, 'Updates'],
+  ['shade', IconShade, 'Shade'],
+  ['communities', IconPeople, 'Communities'],
+  ['calls', IconPhone, 'Calls'],
+];
 import { refreshPushOwner, disablePush, pushState } from '../lib/push';
 
 // What to show under a chat's name in the list.
 function previewOf(c, meId) {
-  if (!c.last_at) return c.is_group ? 'Group created' : 'Say hi 👋';
+  if (!c.last_at) return c.is_group ? 'Group created' : 'Say hi';
   const mine = c.last_sender === meId;
   // A deleted message must never show its old text (or the word "null").
   const deleted = c.last_deleted || (c.last_kind === 'text' && !c.last_body);
   if (deleted) return mine ? 'You deleted this message' : 'This message was deleted';
-  if (c.last_e2ee) return mine ? 'You: 🔒 Secret message' : '🔒 Secret message';
-  const what = c.last_kind === 'image' ? '📷 Photo' : c.last_kind === 'video' ? '🎥 Video' : c.last_kind === 'audio' ? '🎤 Voice note' : c.last_body;
+  if (c.last_e2ee) return mine ? 'You: Secret message' : 'Secret message';
+  const what = c.last_kind === 'image' ? 'Photo' : c.last_kind === 'video' ? 'Video' : c.last_kind === 'audio' ? 'Voice note' : c.last_body;
   if (mine) return `You: ${what}`;
   if (c.is_group && c.last_sender_name) return `${c.last_sender_name.split(' ')[0]}: ${what}`;
   return what;
@@ -68,7 +79,70 @@ export default function ChatShell({ me, onProfileChange }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showStarred, setShowStarred] = useState(false);
   const [showOnline, setShowOnline] = useState(true); // my own "show when I'm online" setting
-  const [tab, setTab] = useState('chats'); // 'chats' | 'updates' | 'shade' | 'communities' | 'calls'
+  const [tab, setTabRaw] = useState('chats'); // 'chats' | 'updates' | 'shade' | 'communities' | 'calls'
+  const [slideDir, setSlideDir] = useState('none'); // which way the new section slides in
+  const tabRef = useRef('chats');
+  const setTab = useCallback((next) => {
+    const from = TABS.findIndex((t) => t[0] === tabRef.current);
+    const to = TABS.findIndex((t) => t[0] === next);
+    if (to < 0 || to === from) return;
+    tabRef.current = next;
+    setSlideDir(to > from ? 'next' : 'prev');
+    setTabRaw(next);
+  }, []);
+  const goTabBy = useCallback((step) => {
+    const i = TABS.findIndex((t) => t[0] === tabRef.current);
+    const j = i + step;
+    if (j >= 0 && j < TABS.length) setTab(TABS[j][0]);
+  }, [setTab]);
+  const swipe = useRef(null);
+  const swiped = useRef(0);
+  const wheelAcc = useRef({ x: 0, t: 0, lock: 0 });
+  // True when the touch started somewhere that scrolls sideways or takes typing: leave those alone.
+  const swipeBlocked = (el) => {
+    for (let n = el; n && n.nodeType === 1 && !n.classList?.contains('sidebar'); n = n.parentElement) {
+      const tag = n.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'NAV' || n.dataset?.noswipe !== undefined) return true;
+      if (n.scrollWidth > n.clientWidth + 4 && ['auto', 'scroll'].includes(getComputedStyle(n).overflowX)) return true;
+    }
+    return false;
+  };
+  const swipeProps = {
+    onTouchStart: (e) => {
+      if (e.touches.length !== 1 || swipeBlocked(e.target)) { swipe.current = null; return; }
+      swipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+    },
+    onTouchEnd: (e) => {
+      const st = swipe.current;
+      swipe.current = null;
+      if (!st || !e.changedTouches[0]) return;
+      const dx = e.changedTouches[0].clientX - st.x;
+      const dy = e.changedTouches[0].clientY - st.y;
+      // A deliberate, mostly-sideways flick: far enough, and clearly more sideways than up/down.
+      if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.6 || Date.now() - st.t > 900) return;
+      // The finger ended on some button after sliding: do not also "tap" it.
+      swiped.current = Date.now();
+      goTabBy(dx < 0 ? 1 : -1);
+    },
+    onClickCapture: (e) => {
+      if (Date.now() - swiped.current < 450) { e.preventDefault(); e.stopPropagation(); }
+    },
+    onTouchCancel: () => { swipe.current = null; },
+    // Two-finger sideways scroll on a laptop trackpad does the same.
+    onWheel: (e) => {
+      const w = wheelAcc.current;
+      const now = Date.now();
+      if (now < w.lock || Math.abs(e.deltaX) < Math.abs(e.deltaY) || swipeBlocked(e.target)) return;
+      if (now - w.t > 220) w.x = 0;
+      w.t = now;
+      w.x += e.deltaX;
+      if (Math.abs(w.x) > 90) {
+        goTabBy(w.x > 0 ? 1 : -1);
+        w.x = 0;
+        w.lock = now + 600;
+      }
+    },
+  };
   const [keyState, setKeyState] = useState('checking'); // 'checking' | 'ready' | 'restore' | 'conflict' | 'error'
   const [showKeyGate, setShowKeyGate] = useState(false);
   const [shadeUnread, setShadeUnread] = useState(0);
@@ -456,21 +530,21 @@ export default function ChatShell({ me, onProfileChange }) {
 
   return (
     <div className={`app ${active ? 'chat-open' : ''}`}>
-      <aside className="sidebar">
+      <aside className="sidebar" {...swipeProps}>
         <div className="sidebar-head">
           <div className="brand">
             <AtomLogo size={36} />
             <span className="logo-text">Atomshade</span>
           </div>
           <div className="head-actions">
-            <button className="icon-btn" title="New chat or group" onClick={() => setShowNew(true)}>
-              ＋
+            <button className="icon-btn" title="New chat or group" aria-label="New chat or group" onClick={() => setShowNew(true)}>
+              <IconNewChat size={21} />
             </button>
             <button className="icon-btn" title="Settings" aria-label="Settings" onClick={() => setShowSettings(true)}>
-              ⚙
+              <IconGear size={21} />
             </button>
             <button className="icon-btn" title="Log out" aria-label="Log out" onClick={logOut}>
-              ⏻
+              <IconLogout size={21} />
             </button>
           </div>
         </div>
@@ -483,6 +557,7 @@ export default function ChatShell({ me, onProfileChange }) {
           </span>
         </button>
 
+        <div key={tab} className={`tab-pane slide-${slideDir}`}>
         {tab === 'chats' && (
           <div className="search">
             <input placeholder="Search chats" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -528,7 +603,7 @@ export default function ChatShell({ me, onProfileChange }) {
         )}
         {tab === 'chats' && (keyState === 'restore' || keyState === 'conflict') && (
           <button className="key-banner" onClick={() => setShowKeyGate(true)}>
-            🔒 Unlock your secret chats on this device
+            <I n="lock" /> Unlock your secret chats on this device
           </button>
         )}
 
@@ -536,17 +611,17 @@ export default function ChatShell({ me, onProfileChange }) {
         <div className="chat-list">
           {view !== 'main' && (
             <button className="folder-row back" onClick={leaveFolder}>
-              <span>←</span> {view === 'locked' ? 'Locked chats' : 'Archived chats'}
+              <span className="folder-ico"><IconBack size={18} /></span> {view === 'locked' ? 'Locked chats' : 'Archived chats'}
             </button>
           )}
           {view === 'main' && !term && archivedChats.length > 0 && (
             <button className="folder-row" onClick={() => setView('archived')}>
-              <span>📥</span> Archived <em>{archivedChats.length}</em>
+              <span className="folder-ico"><IconArchive size={20} /></span> Archived <em>{archivedChats.length}</em>
             </button>
           )}
           {view === 'main' && !term && lockedChats.length > 0 && (
             <button className="folder-row" onClick={openLockedFolder}>
-              <span>🔒</span> Locked chats {lockedUnread > 0 && <i className="dot" aria-label="Unread in locked chats" />}
+              <span className="folder-ico"><IconLock size={20} /></span> Locked chats {lockedUnread > 0 && <i className="dot" aria-label="Unread in locked chats" />}
             </button>
           )}
           {view !== 'main' && loaded && shownChats.length === 0 && <div className="list-empty">Nothing here.</div>}
@@ -554,7 +629,7 @@ export default function ChatShell({ me, onProfileChange }) {
             <div className="list-empty">
               No chats yet.
               <br />
-              Tap ＋ to start one with a friend.
+              Tap the new-chat button at the top to start one with a friend.
             </div>
           )}
           {shownChats.map((c) => (
@@ -572,7 +647,7 @@ export default function ChatShell({ me, onProfileChange }) {
               <div className="chat-meta">
                 <div className="chat-row">
                   <span className="chat-name">
-                    {c.secret ? '🔒 ' : ''}
+                    {c.secret && <span className="secret-ico" aria-label="Secret chat"><IconLock size={13} /></span>}
                     {c.title}
                     {vibeOf(c.other_vibe, c.other_vibe_until) && (
                       <span className="vibe-pill" title={vibeOf(c.other_vibe, c.other_vibe_until).label}>
@@ -584,8 +659,8 @@ export default function ChatShell({ me, onProfileChange }) {
                 </div>
                 <div className="chat-row">
                   <span className="chat-preview">{view === 'locked' ? 'Locked' : previewOf(c, me.id)}</span>
-                  {c.muted && <span className="chat-flag" title="Muted" aria-label="Muted">🔕</span>}
-                  {c.pinned && view === 'main' && <span className="chat-flag" title="Pinned" aria-label="Pinned">📌</span>}
+                  {c.muted && <span className="chat-flag" title="Muted" aria-label="Muted"><IconBellOff size={15} /></span>}
+                  {c.pinned && view === 'main' && <span className="chat-flag" title="Pinned" aria-label="Pinned"><IconPin size={15} /></span>}
                   {c.unread_count > 0 && <span className={`badge ${c.muted ? 'muted' : ''}`}>{c.unread_count}</span>}
                 </div>
               </div>
@@ -593,18 +668,13 @@ export default function ChatShell({ me, onProfileChange }) {
           ))}
         </div>
         )}
+        </div>
 
         <nav className="tabbar" aria-label="Main sections">
-          {[
-            ['chats', '💬', 'Chats'],
-            ['updates', '◔', 'Updates'],
-            ['shade', '🕶', 'Shade'],
-            ['communities', '👥', 'Communities'],
-            ['calls', '☎', 'Calls'],
-          ].map(([key, icon, label]) => (
+          {TABS.map(([key, Icon, label]) => (
             <button key={key} className={tab === key ? 'on' : ''} aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}>
               <span className="tab-icon">
-                {icon}
+                <Icon size={23} />
                 {key === 'shade' && shadeUnread > 0 && <span className="tab-badge">{shadeUnread}</span>}
                 {key === 'chats' && totalUnread > 0 && <span className="tab-badge">{totalUnread > 99 ? '99+' : totalUnread}</span>}
               </span>
@@ -643,7 +713,7 @@ export default function ChatShell({ me, onProfileChange }) {
                 <AtomLogo size={84} />
               </div>
               <h2>Atomshade</h2>
-              <p>Pick a chat on the left, or start a new one with the ＋ button.</p>
+              <p>Pick a chat on the left, or start a new one with the new-chat button at the top.</p>
             </div>
           </div>
         )}

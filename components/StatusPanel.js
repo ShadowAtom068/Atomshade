@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatTime } from '../lib/format';
@@ -213,7 +214,7 @@ export default function StatusPanel({ me, people = [], onClose, embedded = false
         <button className="status-row" onClick={() => (mine ? setViewing({ userId: me.id, index: 0 }) : setComposing(true))}>
           <span className={`story-ring ${mine ? 'has' : 'none'}`}>
             <Avatar name={me.name} seed={me.id} />
-            {!mine && <span className="story-plus">＋</span>}
+            {!mine && <span className="story-plus"><I n="plus" /></span>}
           </span>
           <span className="status-row-text">
             <strong>My status</strong>
@@ -221,9 +222,9 @@ export default function StatusPanel({ me, people = [], onClose, embedded = false
           </span>
         </button>
         <div className="status-add-row">
-          <button onClick={() => { setKind('text'); setFile(null); setComposing(true); }} aria-label="Write a text status">✎ Text</button>
-          <button onClick={() => { setKind('image'); setComposing(true); setTimeout(() => fileRef.current?.click(), 50); }} aria-label="Post a photo status">📷 Photo</button>
-          <button onClick={() => { setKind('video'); setComposing(true); setTimeout(() => fileRef.current?.click(), 50); }} aria-label="Post a video status">🎞 Video</button>
+          <button onClick={() => { setKind('text'); setFile(null); setComposing(true); }} aria-label="Write a text status"><I n="pencil" /> Text</button>
+          <button onClick={() => { setKind('image'); setComposing(true); setTimeout(() => fileRef.current?.click(), 50); }} aria-label="Post a photo status"><I n="camera" /> Photo</button>
+          <button onClick={() => { setKind('video'); setComposing(true); setTimeout(() => fileRef.current?.click(), 50); }} aria-label="Post a video status"><I n="video" /> Video</button>
         </div>
         <h4 className="status-section">Recent updates</h4>
         {!others.length && <p className="status-empty">No updates from your friends yet.</p>}
@@ -245,7 +246,7 @@ export default function StatusPanel({ me, people = [], onClose, embedded = false
       {composing && (
         <div className="modal-bg" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && setComposing(false)}>
           <section className="modal status-modal" role="dialog" aria-modal="true" aria-labelledby="status-title">
-            <div className="modal-head"><h3 id="status-title">New status</h3><button className="icon-btn" onClick={() => setComposing(false)} aria-label="Close">✕</button></div>
+            <div className="modal-head"><h3 id="status-title">New status</h3><button className="icon-btn" onClick={() => setComposing(false)} aria-label="Close"><I n="close" /></button></div>
             <form className="status-form" onSubmit={postStatus}>
               <div className="status-kind-tabs" aria-label="Status type">
                 <button type="button" className={kind === 'text' ? 'active' : ''} onClick={() => { setKind('text'); setFile(null); }}>Text</button>
@@ -264,24 +265,24 @@ export default function StatusPanel({ me, people = [], onClose, embedded = false
                   <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()}>{file ? 'Choose a different file' : `Choose ${kind === 'video' ? 'video' : 'photo'}`}</button>
                   <span>{file ? `${file.name} · ${(file.size / (1024 * 1024)).toFixed(1)} MB` : `Up to 50 MB`}</span>
                   {file && <input className="status-caption" maxLength={300} placeholder="Add a caption (optional)" value={body} onChange={(e) => setBody(e.target.value)} />}
-                  {file && !song && <button type="button" className="btn-secondary" onClick={() => songRef.current?.click()}>🎵 Add a song</button>}
+                  {file && !song && <button type="button" className="btn-secondary" onClick={() => songRef.current?.click()}><I n="music" /> Add a song</button>}
                   {file && song && (
                     <div className="song-box">
-                      <div className="song-head"><span>🎵 {song.title}</span><button type="button" className="link-btn" onClick={removeSong}>Remove</button></div>
+                      <div className="song-head"><span><I n="music" /> {song.title}</span><button type="button" className="link-btn" onClick={removeSong}>Remove</button></div>
                       {song.duration > 1 && (
                         <label className="song-start">Starts at {Math.floor(songStart / 60)}:{String(Math.floor(songStart % 60)).padStart(2, '0')}
                           <input type="range" min="0" max={Math.max(0, Math.floor(song.duration) - 1)} step="1" value={songStart} onChange={(e) => { setSongStart(Number(e.target.value)); if (previewRef.current) previewRef.current.pause(); setPreviewing(false); }} />
                         </label>
                       )}
-                      <button type="button" className="btn-secondary" onClick={togglePreview}>{previewing ? '⏸ Stop preview' : '▶ Preview from here'}</button>
+                      <button type="button" className="btn-secondary" onClick={togglePreview}>{previewing ? '⏸ Stop preview' : 'Preview from here'}</button>
                       <audio ref={previewRef} src={previewUrl} onEnded={() => setPreviewing(false)} />
                     </div>
                   )}
                 </div>
               )}
               <div className="audience-pick" role="radiogroup" aria-label="Who can see this">
-                <button type="button" role="radio" aria-checked={audience === 'everyone'} className={audience === 'everyone' ? 'active' : ''} onClick={() => setAudience('everyone')}>🌍 Everyone</button>
-                <button type="button" role="radio" aria-checked={audience === 'inner'} className={audience === 'inner' ? 'active' : ''} onClick={() => setAudience('inner')}>✦ Inner Orbit</button>
+                <button type="button" role="radio" aria-checked={audience === 'everyone'} className={audience === 'everyone' ? 'active' : ''} onClick={() => setAudience('everyone')}>Everyone</button>
+                <button type="button" role="radio" aria-checked={audience === 'inner'} className={audience === 'inner' ? 'active' : ''} onClick={() => setAudience('inner')}>Inner Orbit</button>
                 {audience === 'inner' && <button type="button" className="link-btn" onClick={() => setShowOrbit(true)}>Edit who</button>}
               </div>
               <div className="status-form-foot"><span>{body.length}/{kind === 'text' ? 700 : 300}</span><button className="btn-primary status-post" disabled={busy || (kind === 'text' ? !body.trim() : !file)}>{busy ? 'Posting…' : 'Post status'}</button></div>
@@ -294,7 +295,7 @@ export default function StatusPanel({ me, people = [], onClose, embedded = false
       {editing && (
         <MediaEditor
           file={editing}
-          doneLabel="Use photo ✓"
+          doneLabel="Use photo "
           onCancel={() => setEditing(null)}
           onError={() => { setFile(editing); setEditing(null); }}
           onDone={(blob) => { setFile(new File([blob], 'status.jpg', { type: 'image/jpeg' })); setEditing(null); }}
@@ -305,7 +306,7 @@ export default function StatusPanel({ me, people = [], onClose, embedded = false
         <VideoEditor
           file={editingVideo}
           maxSeconds={60}
-          doneLabel="Use video ✓"
+          doneLabel="Use video "
           onCancel={() => setEditingVideo(null)}
           onDone={({ blob, type, ext }) => {
             setFile(new File([blob], `status.${ext}`, { type }));
@@ -378,9 +379,9 @@ function StatusViewer({ group, start, isMine, onClose, onDelete }) {
       </div>
       <div className="story-top">
         <Avatar name={group.name === 'My status' ? 'Me' : group.name} seed={group.userId} small />
-        <div className="story-who"><strong>{group.name}</strong><small>{formatTime(cur.created_at)} · {remaining(cur.expires_at)}{cur.audience === 'inner' ? ' · ✦ Inner Orbit' : ''}</small></div>
+        <div className="story-who"><strong>{group.name}</strong><small>{formatTime(cur.created_at)} · {remaining(cur.expires_at)}{cur.audience === 'inner' ? ' · Inner Orbit' : ''}</small></div>
         {isMine && <button className="story-del" onClick={() => onDelete(cur)}>Delete</button>}
-        <button className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+        <button className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
       </div>
       <div className="story-stage" onPointerDown={() => setPaused(true)} onPointerUp={() => setPaused(false)} onPointerLeave={() => setPaused(false)}>
         {cur.kind === 'text' && <div className="story-text" style={{ background: cur.background || BACKGROUNDS[0] }}><p>{cur.body}</p></div>}
@@ -423,7 +424,7 @@ function StorySong({ url, start, title, paused }) {
         onClick={(e) => { e.stopPropagation(); if (blocked && ref.current) { ref.current.play(); setBlocked(false); } else setMuted((m) => !m); }}
         aria-label={muted ? 'Unmute song' : 'Mute song'}
       >
-        {blocked ? '▶ Tap to play' : muted ? '🔇' : '🎵'} {title || 'Song'}
+        {blocked ? 'Tap to play' : muted ? '' : ''} {title || 'Song'}
       </button>
     </>
   );

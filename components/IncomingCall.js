@@ -30,7 +30,7 @@ export default function IncomingCall({ call, onAccept, onDecline, onTimeout }) {
         </div>
         <div className="call-incoming-actions">
           <button className="call-accept" onClick={onAccept}>
-            {call.media === 'video' ? '▣ Accept' : '☎ Accept'}
+            {call.media === 'video' ? 'Accept' : 'Accept'}
           </button>
           <button className="call-decline" onClick={onDecline}>
             Decline

@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { canTrim, extFor, fmtTime, probeVideo, SEND_TYPES, trimVideo } from '../lib/video';
 
@@ -7,7 +8,7 @@ const MIN_CLIP = 0.5;
 
 // Trim a video (and optionally remove its sound) before sending or posting it.
 // onDone({ blob, type, ext, durationMs }) gets the finished file. Nothing is uploaded until then.
-export default function VideoEditor({ file, maxSeconds = 120, maxBytes = 50 * 1024 * 1024, doneLabel = 'Send ➤', onDone, onCancel }) {
+export default function VideoEditor({ file, maxSeconds = 120, maxBytes = 50 * 1024 * 1024, doneLabel = 'Send ', onDone, onCancel }) {
   const [info, setInfo] = useState(null);
   const [error, setError] = useState('');
   const [start, setStart] = useState(0);
@@ -122,10 +123,10 @@ export default function VideoEditor({ file, maxSeconds = 120, maxBytes = 50 * 10
   return (
     <div className="ed-bg" role="dialog" aria-modal="true" aria-label="Video editor">
       <div className="ed-top">
-        <button className="icon-btn" onClick={working ? cancelWork : onCancel} aria-label="Cancel">✕</button>
+        <button className="icon-btn" onClick={working ? cancelWork : onCancel} aria-label="Cancel"><I n="close" /></button>
         <div className="ed-top-mid">
           <button className={`icon-btn ${mute ? 'on' : ''}`} onClick={() => setMute((m) => !m)} aria-label={mute ? 'Sound off' : 'Sound on'} aria-pressed={mute} title="Remove sound" disabled={working}>
-            {mute ? '🔇' : '🔊'}
+            {mute ? '' : ''}
           </button>
         </div>
         <button className="btn-primary ed-done" onClick={finish} disabled={!info || working}>{working ? 'Preparing…' : doneLabel}</button>
@@ -140,7 +141,7 @@ export default function VideoEditor({ file, maxSeconds = 120, maxBytes = 50 * 10
               <video ref={vid} className="ve-video" src={url} playsInline preload="auto" onTimeUpdate={onTime} onEnded={() => setPlaying(false)} onPause={() => setPlaying(false)} />
             )}
             {info && !working && (
-              <button className="ve-play" onClick={togglePlay} aria-label={playing ? 'Pause preview' : 'Play preview'}>{playing ? '⏸' : '▶'}</button>
+              <button className="ve-play" onClick={togglePlay} aria-label={playing ? 'Pause preview' : 'Play preview'}>{playing ? '⏸' : ''}</button>
             )}
             {working && (
               <div className="ve-busy">

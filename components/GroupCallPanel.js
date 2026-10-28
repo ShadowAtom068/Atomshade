@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { GroupCallSession, MAX_CALL_PEOPLE } from '../lib/groupCall';
@@ -22,7 +23,7 @@ function Tile({ name, stream, state, self, video, muted }) {
     <div className={`gc-tile ${video && stream ? 'has-video' : ''}`} data-self={self ? '1' : undefined}>
       {video ? <video ref={ref} autoPlay playsInline muted={!!self} /> : !self && <audio ref={ref} autoPlay />}
       {(!video || !stream) && <div className="gc-avatar" aria-hidden="true">{(label || '?').slice(0, 1).toUpperCase()}</div>}
-      <div className="gc-name">{label}{muted ? ' 🔇' : ''}{status ? ` · ${status}` : ''}</div>
+      <div className="gc-name">{label}{muted ? ' ' : ''}{status ? ` · ${status}` : ''}</div>
     </div>
   );
 }
@@ -187,7 +188,7 @@ export default function GroupCallPanel({ me, call, onClose }) {
             <h2>{title || 'Group call'}</h2>
             <p>{subtitle}</p>
           </div>
-          <button className="icon-btn" onClick={hangup} aria-label="Leave call">✕</button>
+          <button className="icon-btn" onClick={hangup} aria-label="Leave call"><I n="close" /></button>
         </div>
 
         <div className={`gc-grid n${Math.min(4, others.length + 1)}`}>
@@ -202,9 +203,9 @@ export default function GroupCallPanel({ me, call, onClose }) {
 
         {(phase === 'live' || phase === 'starting') && (
           <div className="call-actions">
-            <button onClick={toggleMute}>{muted ? '🔇 Unmute' : '🎙️ Mute'}</button>
-            {video && <button onClick={toggleCamera}>{cameraOff ? '📷 Camera on' : '🚫 Camera off'}</button>}
-            <button className="call-end" onClick={hangup}>☎ Leave</button>
+            <button onClick={toggleMute}>{muted ? 'Unmute' : 'Mute'}</button>
+            {video && <button onClick={toggleCamera}>{cameraOff ? 'Camera on' : 'Camera off'}</button>}
+            <button className="call-end" onClick={hangup}><I n="phone" /> Leave</button>
           </div>
         )}
         <small className="call-note">Up to {MAX_CALL_PEOPLE} people can be in one group call.</small>

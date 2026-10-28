@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatTime, clockTime } from '../lib/format';
@@ -50,7 +51,7 @@ export default function ShadePanel({ me, groups, onUnread }) {
   return (
     <div className="shade-panel">
       <div className="shade-hero">
-        <strong>🕶 Throw Shade</strong>
+        <strong><I n="shade" /> Throw Shade</strong>
         <p>
           Send an anonymous message to someone in a group. They never see who you are, and they can reply, close it, or
           block you from sending more. Messages that get reported are seen by Atomshade moderators, including who sent
@@ -67,7 +68,7 @@ export default function ShadePanel({ me, groups, onUnread }) {
       <div className="chat-list">
         {threads.map((t) => (
           <button key={t.thread_id} className="chat-item" onClick={() => setOpen(t)}>
-            <div className="avatar small group-avatar">{t.i_am === 'target' ? '🕶' : '➤'}</div>
+            <div className="avatar small group-avatar">{t.i_am === 'target' ? '' : ''}</div>
             <div className="chat-meta">
               <div className="chat-row">
                 <span className="chat-name">{t.i_am === 'target' ? 'Anonymous' : `To ${t.other_name || 'someone'}`}</span>
@@ -75,11 +76,11 @@ export default function ShadePanel({ me, groups, onUnread }) {
               </div>
               <div className="chat-row">
                 <span className="chat-preview">
-                  {t.closed ? '🚫 Closed · ' : ''}
+                  {t.closed ? 'Closed · ' : ''}
                   {t.last_mine ? 'You: ' : ''}
                   {t.last_body}
                 </span>
-                {t.unread && <span className="badge">●</span>}
+                {t.unread && <span className="badge"></span>}
               </div>
               <div className="chat-preview" style={{ fontSize: 11 }}>in {t.circle_name || 'a group'}</div>
             </div>
@@ -141,11 +142,11 @@ function ThrowShade({ me, groups, onClose, onSent }) {
         <div className="modal-head">
           {(group || target) && (
             <button type="button" className="icon-btn" aria-label="Back" onClick={() => (target ? setTarget(null) : setGroup(null))}>
-              ←
+              <I n="back" />
             </button>
           )}
-          <h3>🕶 Throw shade</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <h3><I n="shade" /> Throw shade</h3>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
         </div>
         {error && <div className="error">{error}</div>}
 
@@ -264,14 +265,14 @@ function ShadeThread({ thread, onBack }) {
   return (
     <div className="shade-thread">
       <div className="chat-head">
-        <button className="icon-btn" onClick={onBack} aria-label="Back">←</button>
+        <button className="icon-btn" onClick={onBack} aria-label="Back"><I n="back" /></button>
         <div className="who">
-          <div className="name">{isTarget ? '🕶 Anonymous' : `To ${thread.other_name || 'someone'}`}</div>
+          <div className="name">{isTarget ? 'Anonymous' : `To ${thread.other_name || 'someone'}`}</div>
           <div className="status">in {thread.circle_name || 'a group'}</div>
         </div>
         {!closed && (
           <div className="call-head-actions">
-            <button className="icon-btn" title="Close this shade" onClick={() => close(false)}>🚫</button>
+            <button className="icon-btn" title="Close this shade" onClick={() => close(false)}><I n="ban" /></button>
           </div>
         )}
       </div>
@@ -279,7 +280,7 @@ function ShadeThread({ thread, onBack }) {
         {msgs.map((m) => (
           <div key={m.id} className={`bubble-row ${m.mine ? 'mine' : 'theirs'}`}>
             <div className="bubble">
-              {!m.mine && <div className="sender-name">{m.hidden ? '🕶 Anonymous' : thread.other_name || 'Them'}</div>}
+              {!m.mine && <div className="sender-name">{m.hidden ? 'Anonymous' : thread.other_name || 'Them'}</div>}
               {m.body}
               <div className="bubble-meta"><span>{clockTime(m.created_at)}</span></div>
               {isTarget && m.hidden && !closed && (
@@ -304,7 +305,7 @@ function ShadeThread({ thread, onBack }) {
           )}
           <form className="composer" onSubmit={reply}>
             <input placeholder="Reply" value={text} maxLength={500} onChange={(e) => setText(e.target.value)} />
-            <button className="send-btn" aria-label="Send" disabled={!text.trim() || busy}>➤</button>
+            <button className="send-btn" aria-label="Send" disabled={!text.trim() || busy}><I n="send" /></button>
           </form>
         </>
       )}

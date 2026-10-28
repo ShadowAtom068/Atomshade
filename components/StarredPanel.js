@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatTime } from '../lib/format';
@@ -35,14 +36,14 @@ export default function StarredPanel({ me, onOpen, onClose }) {
     setItems((list) => (list || []).filter((x) => x.message_id !== it.message_id));
   }
 
-  const what = (it) => (it.kind === 'image' ? '📷 Photo' : it.kind === 'video' ? '🎥 Video' : it.kind === 'audio' ? '🎤 Voice note' : it.body || '');
+  const what = (it) => (it.kind === 'image' ? 'Photo' : it.kind === 'video' ? 'Video' : it.kind === 'audio' ? 'Voice note' : it.body || '');
 
   return (
     <div className="modal-bg" style={{ zIndex: 65 }} onClick={onClose}>
       <div className="modal starred" role="dialog" aria-modal="true" aria-label="Starred messages" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>⭐ Starred messages</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <h3><I n="star" /> Starred messages</h3>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
         </div>
         <div className="starred-body">
           {error && <div className="error" role="alert">{error}</div>}
@@ -61,7 +62,7 @@ export default function StarredPanel({ me, onOpen, onClose }) {
                     </span>
                     <span className="starred-text">{what(it)}</span>
                   </button>
-                  <button type="button" className="icon-btn" onClick={() => unstar(it)} aria-label="Remove star" title="Remove star">✕</button>
+                  <button type="button" className="icon-btn" onClick={() => unstar(it)} aria-label="Remove star" title="Remove star"><I n="close" /></button>
                 </li>
               ))}
             </ul>

@@ -1,5 +1,6 @@
 'use client';
 
+import { I, IconFile, IconImage, IconLocation, IconOnce, IconPoll } from './Icons';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { downloadUrl, mediaUrl } from '../lib/media';
@@ -39,7 +40,7 @@ export function LocationMessage({ meta }) {
   const lng = Number(meta.lng);
   return (
     <div className="loc-msg">
-      <div className="loc-pin" aria-hidden="true">📍</div>
+      <div className="loc-pin" aria-hidden="true"><I n="location" /></div>
       <div className="loc-info">
         <strong>Location</strong>
         <span>{lat.toFixed(5)}, {lng.toFixed(5)}</span>
@@ -69,7 +70,7 @@ export function PollMessage({ m, votes, meId, onVote, names }) {
   }
   return (
     <div className="poll-msg">
-      <div className="poll-q">📊 {m.meta.q}</div>
+      <div className="poll-q"><I n="poll" /> {m.meta.q}</div>
       <div className="poll-hint">{multi ? 'Select one or more' : 'Select one'}</div>
       {options.map((o, i) => {
         const pct = voters ? Math.round((counts[i] / voters) * 100) : 0;
@@ -77,7 +78,7 @@ export function PollMessage({ m, votes, meId, onVote, names }) {
         return (
           <button key={i} type="button" className={`poll-opt ${on ? 'on' : ''}`} onClick={() => pick(i)} aria-pressed={on}>
             <span className="poll-fill" style={{ width: `${pct}%` }} />
-            <span className="poll-check" aria-hidden="true">{on ? '✔' : '○'}</span>
+            <span className="poll-check" aria-hidden="true">{on ? '' : ''}</span>
             <span className="poll-text">{o}</span>
             <span className="poll-count">{counts[i]}</span>
           </button>
@@ -122,13 +123,13 @@ export function PollModal({ onClose, onSend }) {
   return (
     <div className="modal-bg" onClick={onClose}>
       <form className="modal" role="dialog" aria-modal="true" aria-label="New poll" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <div className="modal-head"><h3>📊 New poll</h3><button type="button" className="icon-btn" onClick={onClose} aria-label="Close">✕</button></div>
+        <div className="modal-head"><h3><I n="poll" /> New poll</h3><button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button></div>
         <div className="pad-field">
           <input autoFocus maxLength={200} placeholder="Question" value={q} onChange={(e) => setQ(e.target.value)} />
           {opts.map((o, i) => (
             <input key={i} style={{ marginTop: 8 }} maxLength={100} placeholder={`Option ${i + 1}`} value={o} onChange={(e) => setOpts(opts.map((x, j) => (j === i ? e.target.value : x)))} />
           ))}
-          {opts.length < 6 && <button type="button" className="link-btn" style={{ marginTop: 8 }} onClick={() => setOpts([...opts, ''])}>＋ Add option</button>}
+          {opts.length < 6 && <button type="button" className="link-btn" style={{ marginTop: 8 }} onClick={() => setOpts([...opts, ''])}><I n="plus" /> Add option</button>}
           <label className="poll-multi"><input type="checkbox" checked={multi} onChange={(e) => setMulti(e.target.checked)} /> Allow more than one answer</label>
           {err && <p className="form-error" role="alert">{err}</p>}
         </div>
@@ -172,7 +173,7 @@ export function ReactionPicker({ current, onPick }) {
 export function ViewOnceMessage({ m, mine, opened, onOpened, viewedBy }) {
   const [busy, setBusy] = useState(false);
   const [shown, setShown] = useState(null); // { url }
-  const icon = m.kind === 'video' ? '🎥' : '📷';
+  const icon = m.kind === 'video' ? '' : '';
   const what = m.kind === 'video' ? 'video' : 'photo';
 
   async function view() {
@@ -241,22 +242,26 @@ export function AttachMenu({ onPick, onClose, canLocation }) {
     return () => window.removeEventListener('keydown', esc);
   }, [onClose]);
   const items = [
-    ['photo', '🖼️', 'Photo or video'],
-    ['once', '1️⃣', 'Photo or video (view once)'],
-    ['doc', '📄', 'Document'],
-    ...(canLocation ? [['location', '📍', 'Location']] : []),
-    ['poll', '📊', 'Poll'],
+    ['photo', IconImage, 'Photo or video'],
+    ['once', IconOnce, 'View once (photo or video)'],
+    ['doc', IconFile, 'Document'],
+    ...(canLocation ? [['location', IconLocation, 'Location']] : []),
+    ['poll', IconPoll, 'Poll'],
   ];
+  // The menu sits right above the paperclip button (its parent is position: relative).
+  // The see-through layer behind it closes the menu when you tap anywhere else.
   return (
-    <div className="attach-bg" onClick={onClose}>
-      <div className="attach-menu" role="menu" onClick={(e) => e.stopPropagation()}>
-        {items.map(([k, ico, label]) => (
-          <button key={k} role="menuitem" onClick={() => onPick(k)}>
-            <span aria-hidden="true">{ico}</span> {label}
+    <>
+      <div className="attach-bg" onClick={onClose} />
+      <div className="attach-menu" role="menu">
+        {items.map(([k, Icon, label]) => (
+          <button key={k} type="button" role="menuitem" className={`am-${k}`} onClick={() => onPick(k)}>
+            <span className="am-ico"><Icon size={20} /></span>
+            <span>{label}</span>
           </button>
         ))}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -277,13 +282,13 @@ export function ForwardModal({ chats, onSend, onClose }) {
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" role="dialog" aria-modal="true" aria-label="Forward to" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head"><h3>↪ Forward to…</h3><button className="icon-btn" onClick={onClose} aria-label="Close">✕</button></div>
+        <div className="modal-head"><h3><I n="forward" /> Forward to…</h3><button className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button></div>
         <div className="pad-field"><input autoFocus placeholder="Search chats" value={term} onChange={(e) => setTerm(e.target.value)} /></div>
         <div className="forward-list">
           {shown.length === 0 && <div className="list-empty">No chats found.</div>}
           {shown.map((c) => (
             <button key={c.conversation_id} type="button" className={picked.includes(c.conversation_id) ? 'on' : ''} onClick={() => toggle(c.conversation_id)} aria-pressed={picked.includes(c.conversation_id)}>
-              <span aria-hidden="true">{picked.includes(c.conversation_id) ? '☑' : '☐'}</span> {c.title}
+              <span aria-hidden="true">{picked.includes(c.conversation_id) ? '' : ''}</span> {c.title}
             </button>
           ))}
         </div>

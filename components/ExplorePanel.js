@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -45,7 +46,7 @@ export default function ExplorePanel({ me, onClose, embedded = false }) {
     setChanRoles(Object.fromEntries((fm.data || []).map((x) => [x.channel_id, x.role])));
     setCommRoles(Object.fromEntries((mm.data || []).map((x) => [x.community_id, x.role])));
     // explore_counts is optional: without it we just do not show numbers.
-    setCounts(Object.fromEntries((ct.data || []).map((x) => [`${x.kind}:${x.id}`, Number(x.members)])));
+    setCounts(Object.fromEntries((Array.isArray(ct.data) ? ct.data : []).map((x) => [`${x.kind}:${x.id}`, Number(x.members)])));
   }, [me.id]);
 
   useEffect(() => {
@@ -171,7 +172,7 @@ export default function ExplorePanel({ me, onClose, embedded = false }) {
           <h3>Channels &amp; Communities</h3>
           {!embedded && (
             <button className="icon-btn" onClick={onClose} aria-label="Close">
-              ✕
+              <I n="close" />
             </button>
           )}
         </header>
@@ -179,17 +180,17 @@ export default function ExplorePanel({ me, onClose, embedded = false }) {
 
         <div className="explore-tabs">
           <button className={isChannels ? 'active' : ''} onClick={() => switchTab('channels')}>
-            📢 Channels
+            <I n="megaphone" /> Channels
           </button>
           <button className={!isChannels ? 'active' : ''} onClick={() => switchTab('communities')}>
-            👥 Communities
+            <I n="people" /> Communities
           </button>
         </div>
 
         {selected && isChannels ? (
           <>
             <div className="explore-selected">
-              <button onClick={() => setSelected(null)}>← Back</button>
+              <button onClick={() => setSelected(null)}><I n="back" /> Back</button>
               <div>
                 <strong>{selected.name}</strong>
                 <p>{selected.description || 'Channel updates'}</p>
@@ -237,7 +238,7 @@ export default function ExplorePanel({ me, onClose, embedded = false }) {
                 {list.length} {tab}
               </span>
               <button className="primary-btn" onClick={() => setShowCreate((v) => !v)}>
-                ＋ Create {isChannels ? 'channel' : 'community'}
+                <I n="plus" /> Create {isChannels ? 'channel' : 'community'}
               </button>
             </div>
 
@@ -274,7 +275,7 @@ export default function ExplorePanel({ me, onClose, embedded = false }) {
                 return (
                   <article className="explore-card" key={item.id}>
                     <div className="explore-card-head">
-                      <div className="explore-icon">{isChannels ? '📢' : '👥'}</div>
+                      <div className="explore-icon">{isChannels ? '' : ''}</div>
                       <div className="explore-card-title">
                         <strong>{item.name}</strong>
                         <p>{item.description || 'No description yet.'}</p>

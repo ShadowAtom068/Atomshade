@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { CallSession } from '../lib/callEngine';
@@ -232,7 +233,7 @@ export default function CallPanel({ me, peer, role, media, callId, onClose }) {
             <p>{subtitle}</p>
           </div>
           <button className="icon-btn" onClick={hangup} aria-label="End call">
-            ✕
+            <I n="close" />
           </button>
         </div>
 
@@ -254,10 +255,10 @@ export default function CallPanel({ me, peer, role, media, callId, onClose }) {
 
         {!finished && (
           <div className="call-actions">
-            <button onClick={toggleMute}>{muted ? '🔇 Unmute' : '🎙️ Mute'}</button>
-            {media === 'video' && <button onClick={toggleCamera}>{cameraOff ? '📷 Camera on' : '🚫 Camera off'}</button>}
+            <button onClick={toggleMute}>{muted ? 'Unmute' : 'Mute'}</button>
+            {media === 'video' && <button onClick={toggleCamera}>{cameraOff ? 'Camera on' : 'Camera off'}</button>}
             <button className="call-end" onClick={hangup}>
-              ☎ End call
+              <I n="phone" /> End call
             </button>
           </div>
         )}

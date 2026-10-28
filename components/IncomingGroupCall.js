@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect } from 'react';
 import { startRingtone } from '../lib/ringtone';
 
@@ -24,9 +25,9 @@ export default function IncomingGroupCall({ ring, onJoin, onDismiss }) {
             <p>{ring.starterName} started a call</p>
           </div>
         </div>
-        <div className="call-audio-stage"><div className="call-avatar">👥</div></div>
+        <div className="call-audio-stage"><div className="call-avatar"><I n="people" /></div></div>
         <div className="call-incoming-actions">
-          <button className="call-accept" onClick={onJoin}>{ring.media === 'video' ? '▣ Join' : '☎ Join'}</button>
+          <button className="call-accept" onClick={onJoin}>{ring.media === 'video' ? 'Join' : 'Join'}</button>
           <button className="call-decline" onClick={onDismiss}>Not now</button>
         </div>
       </section>

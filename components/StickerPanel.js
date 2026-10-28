@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { EMOJI_GRID, GIPHY_KEY, MAX_MY_STICKERS, STICKER_PACKS, loadMyStickers, makeSticker, saveMyStickers, searchGifs } from '../lib/stickers';
 
@@ -57,16 +58,16 @@ export default function StickerPanel({ uid, onEmoji, onSticker, onMine, onGif, o
     setMine(next);
   }
 
-  const tabs = [['emoji', '😊', 'Emoji'], ...(canSend ? [['stickers', '🎭', 'Stickers'], ...(GIPHY_KEY ? [['gif', 'GIF', 'GIF']] : []), ['mine', '⭐', 'Mine']] : [])];
+  const tabs = [['emoji', 'smile', 'Emoji'], ...(canSend ? [['stickers', 'image', 'Stickers'], ...(GIPHY_KEY ? [['gif', 'GIF', 'GIF']] : []), ['mine', 'star', 'Mine']] : [])];
   const cur = STICKER_PACKS.find((p) => p.id === pack) || STICKER_PACKS[0];
 
   return (
     <div className="sticker-panel" role="dialog" aria-label="Emoji and stickers">
       <div className="sticker-tabs" role="tablist">
         {tabs.map(([k, ico, label]) => (
-          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} title={label}>{ico}<span>{label}</span></button>
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} title={label}>{ico === 'GIF' ? 'GIF' : <I n={ico} s={17} />}<span>{label}</span></button>
         ))}
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="Close emoji panel">✕</button>
+        <button type="button" className="icon-btn" onClick={onClose} aria-label="Close emoji panel"><I n="close" /></button>
       </div>
       <div className="sticker-body">
         {tab === 'emoji' && (
@@ -107,16 +108,16 @@ export default function StickerPanel({ uid, onEmoji, onSticker, onMine, onGif, o
         {tab === 'mine' && (
           <>
             <div className="sticker-grid mine">
-              <button type="button" className="add-sticker" onClick={() => fileRef.current?.click()} aria-label="Add a sticker from a picture">＋</button>
+              <button type="button" className="add-sticker" onClick={() => fileRef.current?.click()} aria-label="Add a sticker from a picture"><I n="plus" /></button>
               {mine.map((u, i) => (
                 <span key={i} className="mine-wrap">
                   <button type="button" onClick={() => onMine(u)} aria-label="Send my sticker">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={u} alt="My sticker" /></button>
-                  <button type="button" className="mine-x" onClick={() => removeMine(i)} aria-label="Remove this sticker">✕</button>
+                  <button type="button" className="mine-x" onClick={() => removeMine(i)} aria-label="Remove this sticker"><I n="close" /></button>
                 </span>
               ))}
             </div>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={addMine} />
-            <small>{note || 'Tap ＋ to turn any picture into a sticker. They are kept on this device.'}</small>
+            <small>{note || 'Tap to turn any picture into a sticker. They are kept on this device.'}</small>
           </>
         )}
       </div>

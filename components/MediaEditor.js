@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // A small photo editor: crop, rotate, flip, draw, text and filters.
@@ -415,11 +416,11 @@ export default function MediaEditor({ file, onDone, onCancel, onError, doneLabel
   return (
     <div className="ed-bg" role="dialog" aria-modal="true" aria-label="Photo editor">
       <div className="ed-top">
-        <button className="icon-btn" onClick={onCancel} aria-label="Cancel">✕</button>
+        <button className="icon-btn" onClick={onCancel} aria-label="Cancel"><I n="close" /></button>
         <div className="ed-top-mid">
           <button className="icon-btn" onClick={rotate} aria-label="Rotate" title="Rotate">⟳</button>
-          <button className="icon-btn" onClick={flip} aria-label="Flip" title="Flip">⇋</button>
-          <button className="icon-btn" onClick={undo} aria-label="Undo" title="Undo">↶</button>
+          <button className="icon-btn" onClick={flip} aria-label="Flip" title="Flip"></button>
+          <button className="icon-btn" onClick={undo} aria-label="Undo" title="Undo"><I n="undo" /></button>
         </div>
         <button className="btn-primary ed-done" onClick={finish} disabled={busy}>
           {busy ? 'Saving…' : doneLabel}
@@ -467,7 +468,7 @@ export default function MediaEditor({ file, onDone, onCancel, onError, doneLabel
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => setTexts((list) => list.filter((x) => x.id !== t.id))}
               >
-                ✕
+                <I n="close" />
               </button>
             </div>
           ))}
@@ -482,7 +483,7 @@ export default function MediaEditor({ file, onDone, onCancel, onError, doneLabel
                 {label}
               </button>
             ))}
-            <button type="button" className="ed-chip apply" onClick={applyCrop}>✓ Crop</button>
+            <button type="button" className="ed-chip apply" onClick={applyCrop}><I n="check" /> Crop</button>
           </div>
         )}
         {tool === 'draw' && (
@@ -520,7 +521,7 @@ export default function MediaEditor({ file, onDone, onCancel, onError, doneLabel
                 <input type="range" min="0.04" max="0.14" step="0.005" value={textSize} onChange={(e) => setTextSize(Number(e.target.value))} />
               </label>
             </div>
-            <p className="ed-hint">Drag the text to move it. ✕ removes it.</p>
+            <p className="ed-hint">Drag the text to move it. <I n="close" /> removes it.</p>
           </>
         )}
         {tool === 'filter' && (
@@ -543,10 +544,10 @@ export default function MediaEditor({ file, onDone, onCancel, onError, doneLabel
 
       <div className="ed-tabs" role="tablist" aria-label="Edit tools">
         {[
-          ['crop', '✂', 'Crop'],
-          ['draw', '✎', 'Draw'],
+          ['crop', '', 'Crop'],
+          ['draw', '', 'Draw'],
           ['text', 'Aa', 'Text'],
-          ['filter', '◐', 'Filters'],
+          ['filter', '', 'Filters'],
         ].map(([id, icon, label]) => (
           <button key={id} role="tab" aria-selected={tool === id} className={tool === id ? 'on' : ''} onClick={() => pickTool(id)}>
             <span>{icon}</span>

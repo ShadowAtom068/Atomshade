@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import NotifyButton from './NotifyButton';
@@ -84,7 +85,7 @@ function AppLockDialog({ uid, mode, onDone, onClose }) {
       <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
         <div className="modal-head">
           <h3>{mode === 'on' ? 'Turn on App lock' : mode === 'change' ? 'Change PIN' : 'Turn off App lock'}</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
         </div>
         <p className="modal-sub">
           {mode === 'on'
@@ -134,7 +135,7 @@ function DeleteDialog({ me, onClose, onDeleted }) {
       <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={go}>
         <div className="modal-head">
           <h3>Delete my account</h3>
-          <button type="button" className="icon-btn" onClick={onClose} disabled={busy} aria-label="Close">✕</button>
+          <button type="button" className="icon-btn" onClick={onClose} disabled={busy} aria-label="Close"><I n="close" /></button>
         </div>
         <div className="del-body">
           <p>This <b>permanently</b> removes <b>{me.email}</b> and cannot be undone.</p>
@@ -310,8 +311,8 @@ export default function SettingsPanel({ me, onClose, onEditProfile, onOpenStarre
     <div className="modal-bg settings-bg" onClick={onClose}>
       <div className="modal settings" role="dialog" aria-modal="true" aria-label="Settings" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>⚙ Settings</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close settings">✕</button>
+          <h3><I n="gear" /> Settings</h3>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close settings"><I n="close" /></button>
         </div>
         <div className="settings-body">
           {error && <div className="error" role="alert">{error}</div>}
@@ -325,7 +326,7 @@ export default function SettingsPanel({ me, onClose, onEditProfile, onOpenStarre
             <span className="set-chev" aria-hidden="true">›</span>
           </button>
 
-          <Group icon="🔐" title="Privacy">
+          <Group icon="" title="Privacy">
             {setupMissing ? (
               <p className="set-note">Privacy options need the latest database update (update-settings.sql).</p>
             ) : (
@@ -357,7 +358,7 @@ export default function SettingsPanel({ me, onClose, onEditProfile, onOpenStarre
             </div>
           </Group>
 
-          <Group icon="🛡" title="Security">
+          <Group icon="" title="Security">
             <Row title="App lock" hint="Ask for a PIN every time Atomshade is opened. Saved on this device only.">
               <Switch label="App lock" on={lockOn} onChange={(v) => setLockDlg(v ? 'on' : 'off')} />
             </Row>
@@ -402,14 +403,14 @@ export default function SettingsPanel({ me, onClose, onEditProfile, onOpenStarre
             <p className="set-note">To hide single chats, press and hold a chat (or right-click it) and choose Lock chat.</p>
           </Group>
 
-          <Group icon="💬" title="Chats">
+          <Group icon="" title="Chats">
             <div className="set-sub">
               <b>Theme</b>
               <div className="seg" role="radiogroup" aria-label="Theme">
                 {[
-                  ['dark', '🌙 Dark'],
-                  ['light', '☀ Light'],
-                  ['system', '📱 Device'],
+                  ['dark', 'Dark'],
+                  ['light', 'Light'],
+                  ['system', 'Device'],
                 ].map(([v, l]) => (
                   <button key={v} type="button" role="radio" aria-checked={prefs.theme === v} className={prefs.theme === v ? 'on' : ''} onClick={() => setPref('theme', v)}>{l}</button>
                 ))}
@@ -437,17 +438,17 @@ export default function SettingsPanel({ me, onClose, onEditProfile, onOpenStarre
               </div>
             </div>
             <button type="button" className="set-link" onClick={onOpenStarred}>
-              <span>⭐ Starred messages</span>
+              <span><I n="star" /> Starred messages</span>
               <span className="set-chev" aria-hidden="true">›</span>
             </button>
             <p className="set-note">Disappearing messages are set for each chat: open a chat, tap ⋮, then “Disappearing messages”.</p>
           </Group>
 
-          <Group icon="🔔" title="Notifications">
+          <Group icon="" title="Notifications">
             <NotifyButton />
           </Group>
 
-          <Group icon="💾" title="Storage and data">
+          <Group icon="" title="Storage and data">
             <Row title="Auto-download photos" hint="When off, you tap a photo to download it. Saves data.">
               <Switch label="Auto-download photos" on={prefs.autoImages} onChange={(v) => setPref('autoImages', v)} />
             </Row>
@@ -467,7 +468,7 @@ export default function SettingsPanel({ me, onClose, onEditProfile, onOpenStarre
             </div>
             <div className="set-sub">
               <b>Back up my chats</b>
-              <small>Saves all your normal chats as one text file on this device (words only, no photos). For a secret chat, open it and use ⋮ → Export chat.</small>
+              <small>Saves all your normal chats as one text file on this device (words only, no photos). For a secret chat, open it and use ⋮ <I n="arrowRight" /> Export chat.</small>
               <div className="set-actions">
                 <button type="button" className="btn-ghost" onClick={runBackup} disabled={backingUp}>{backingUp ? 'Saving…' : '⬇ Save a copy'}</button>
               </div>
@@ -475,7 +476,7 @@ export default function SettingsPanel({ me, onClose, onEditProfile, onOpenStarre
             </div>
           </Group>
 
-          <Group icon="👤" title="Account">
+          <Group icon="" title="Account">
             <div className="set-actions">
               <button type="button" className="btn-ghost" onClick={onLogout}>Log out</button>
               <button type="button" className="btn-ghost" onClick={logOutOthers}>Log out other devices</button>

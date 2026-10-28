@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Avatar from './Avatar';
@@ -48,8 +49,8 @@ export default function OrbitEditor({ me, people, onClose, onSaved }) {
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <h3>✦ Inner Orbit</h3>
-          <button className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <h3>Inner Orbit</h3>
+          <button className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
         </div>
         <p className="modal-sub">Only these people can see status updates you post to your Inner Orbit. Nobody is told who is in it.</p>
         {error && <div className="error">{error}</div>}
@@ -61,7 +62,7 @@ export default function OrbitEditor({ me, people, onClose, onSaved }) {
               <button key={p.id} type="button" className="chat-item" onClick={() => toggle(p.id)}>
                 <Avatar name={p.name} seed={p.id} small />
                 <div className="chat-meta"><div className="chat-name">{p.name}</div></div>
-                <span className={`check ${picked.has(p.id) ? 'on' : ''}`}>{picked.has(p.id) ? '✓' : ''}</span>
+                <span className={`check ${picked.has(p.id) ? 'on' : ''}`}>{picked.has(p.id) ? '' : ''}</span>
               </button>
             ))}
         </div>

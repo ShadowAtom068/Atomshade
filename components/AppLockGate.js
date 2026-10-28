@@ -165,7 +165,7 @@ export default function AppLockGate({ uid, children }) {
             </button>
             {biometricOn(uid) && (
               <button type="button" className="btn-ghost" onClick={useBio} disabled={bioBusy}>
-                👆 {bioBusy ? 'Waiting…' : 'Use fingerprint or face'}
+                {bioBusy ? 'Waiting…' : 'Use fingerprint or face'}
               </button>
             )}
             <button type="button" className="btn-ghost applock-forgot" onClick={forgot}>

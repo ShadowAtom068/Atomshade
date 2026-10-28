@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Avatar from './Avatar';
@@ -37,13 +38,13 @@ export default function GroupInfo({ chat, members, me, onClose, onLeft, onRename
         <div className="modal-head">
           <h3>{chat.title}</h3>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
-            ✕
+            <I n="close" />
           </button>
         </div>
         <p className="modal-sub">{members.length} members</p>
         {isAdmin && !editing && (
           <div className="pad-field">
-            <button className="btn-ghost" onClick={() => setEditing(true)}>✏️ Rename group for everyone</button>
+            <button className="btn-ghost" onClick={() => setEditing(true)}><I n="pencil" /> Rename group for everyone</button>
           </div>
         )}
         {isAdmin && editing && (

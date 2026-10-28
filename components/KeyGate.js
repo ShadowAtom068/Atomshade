@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useState } from 'react';
 import { restoreFromBackup, resetKeys } from '../lib/secret';
 
@@ -46,8 +47,8 @@ export default function KeyGate({ userId, state, onDone, onClose }) {
     <div className="modal-bg" onClick={onClose}>
       <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={restore}>
         <div className="modal-head">
-          <h3>🔒 Secret chat key</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <h3><I n="lock" /> Secret chat key</h3>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
         </div>
         <p className="modal-sub">
           {state === 'conflict'

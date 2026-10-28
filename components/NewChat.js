@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import Avatar from './Avatar';
@@ -82,12 +83,12 @@ export default function NewChat({ me, online, recent = [], onPickPerson, onCreat
         <div className="modal-head">
           {mode === 'group' ? (
             <button className="icon-btn" onClick={() => setMode('chat')} aria-label="Back">
-              ←
+              <I n="back" />
             </button>
           ) : null}
           <h3>{mode === 'group' ? 'New group' : 'New chat'}</h3>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
-            ✕
+            <I n="close" />
           </button>
         </div>
 
@@ -123,7 +124,7 @@ export default function NewChat({ me, online, recent = [], onPickPerson, onCreat
           {mode === 'chat' && (
             <label className="secret-toggle">
               <input type="checkbox" checked={secret} onChange={(e) => setSecret(e.target.checked)} />
-              <span>🔒 Secret chat <small>(end-to-end encrypted, text only)</small></span>
+              <span><I n="lock" /> Secret chat <small>(end-to-end encrypted, text only)</small></span>
             </label>
           )}
           {!searching && shown.length > 0 && <div className="list-label">Your people</div>}
@@ -148,7 +149,7 @@ export default function NewChat({ me, online, recent = [], onPickPerson, onCreat
                 <div className="chat-name">{p.name}</div>
                 <div className="chat-preview">{vibeOf(p.vibe, p.vibe_until) ? `${vibeOf(p.vibe, p.vibe_until).icon} ${vibeOf(p.vibe, p.vibe_until).label}` : p.about || ''}</div>
               </div>
-              {mode === 'group' && <span className={`check ${picked.has(p.id) ? 'on' : ''}`}>{picked.has(p.id) ? '✓' : ''}</span>}
+              {mode === 'group' && <span className={`check ${picked.has(p.id) ? 'on' : ''}`}>{picked.has(p.id) ? '' : ''}</span>}
             </button>
           ))}
         </div>

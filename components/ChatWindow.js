@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { clockTime, nameColor } from '../lib/format';
@@ -16,12 +17,13 @@ import { chatToText, downloadText, fetchAllMessages, safeName } from '../lib/exp
 import { DOC_ACCEPT, MAX_DOC_BYTES, describeMessage, docInfo, isPlainText, likeEscape } from '../lib/extras';
 import StickerPanel from './StickerPanel';
 import { dataUrlToBlob } from '../lib/stickers';
+import { IconBack, IconClip, IconMic, IconMore, IconPhone, IconSend, IconSmile, IconTimer, IconVideo } from './Icons';
 import { AttachMenu, FileMessage, ForwardModal, LocationMessage, PollMessage, PollModal, ReactionPicker, ReactionRow, ViewOnceMessage } from './MessageExtras';
 
 const MAX_VOICE_MS = 3 * 60 * 1000; // voice notes stop by themselves after 3 minutes
 const MAX_PHOTO_BYTES = 25 * 1024 * 1024;
 const EDIT_WINDOW_MS = 15 * 60 * 1000;
-const LOCKED_TEXT = '🔒 This message cannot be opened on this device';
+const LOCKED_TEXT = 'This message cannot be opened on this device';
 
 // Time capsules appear in the order they were opened, not the order they were written.
 const sortKey = (m) => new Date(m.sort_at || m.deliver_at || m.created_at).getTime();
@@ -43,23 +45,11 @@ function localInput(date) {
 
 function Ticks({ message, isGroup }) {
   // In groups we only show "sent". In 1-on-1 chats: sent, delivered, read.
-  if (isGroup) return <span className="tick">✓</span>;
-  if (message.read_at) return <span className="tick read">✓✓</span>;
-  if (message.delivered_at) return <span className="tick">✓✓</span>;
-  return <span className="tick">✓</span>;
+  if (isGroup) return <span className="tick"><I n="check" /></span>;
+  if (message.read_at) return <span className="tick read"><I n="checkCheck" /></span>;
+  if (message.delivered_at) return <span className="tick"><I n="checkCheck" /></span>;
+  return <span className="tick"><I n="check" /></span>;
 }
-
-const ClipIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M21 12.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3" />
-  </svg>
-);
-const MicIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="9" y="3" width="6" height="12" rx="3" />
-    <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-  </svg>
-);
 
 export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, callBusy, keyState, onNeedKeys, onChatAction, onChanged, forwardTargets, onGroupCall, onJoinGroupCall }) {
   const convId = chat.conversation_id;
@@ -702,7 +692,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
     try {
       const path = await uploadMedia(convId, file, info.ext, info.mime);
       const name = file.name.slice(0, 150);
-      await insertExtra({ body: `📄 ${name}`.slice(0, 200), media_path: path, meta: { t: 'file', name, size: file.size, mime: info.mime } });
+      await insertExtra({ body: `${name}`.slice(0, 200), media_path: path, meta: { t: 'file', name, size: file.size, mime: info.mime } });
     } catch (err) {
       alert('Could not send: ' + (err.message || err));
     } finally {
@@ -724,7 +714,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
         const lat = Number(pos.coords.latitude.toFixed(5));
         const lng = Number(pos.coords.longitude.toFixed(5));
         if (!confirm(`Share your current location with ${chat.title}?`)) return;
-        insertExtra({ body: '📍 Location', meta: { t: 'location', lat, lng } });
+        insertExtra({ body: 'Location', meta: { t: 'location', lat, lng } });
       },
       (err) => alert(err.code === 1 ? 'Location is blocked. Allow it for this site in your browser settings, then try again.' : 'Could not find your location. Try again.'),
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
@@ -732,7 +722,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
   }
 
   async function sendPoll(meta) {
-    return insertExtra({ body: `📊 ${meta.q}`.slice(0, 200), meta });
+    return insertExtra({ body: `${meta.q}`.slice(0, 200), meta });
   }
 
   function addEmoji(e) {
@@ -1034,7 +1024,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
     <>
       <div className="chat-head">
         <button className="icon-btn back-btn" onClick={onBack} aria-label="Back">
-          ←
+          <IconBack size={22} />
         </button>
         <Avatar name={chat.title} seed={chat.other_id || convId} online={!isGroup && online} small />
         <div
@@ -1044,61 +1034,61 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
           onClick={isGroup ? () => setShowInfo(true) : undefined}
           onKeyDown={isGroup ? (e) => e.key === 'Enter' && setShowInfo(true) : undefined}
         >
-          <div className="name">{isSecret ? '🔒 ' : ''}{chat.title}{chat.other_vibe && !isGroup ? <span className="vibe-pill" title={chat.other_vibe.label}>{chat.other_vibe.icon}</span> : null}</div>
+          <div className="name">{isSecret ? '' : ''}{chat.title}{chat.other_vibe && !isGroup ? <span className="vibe-pill" title={chat.other_vibe.label}>{chat.other_vibe.icon}</span> : null}</div>
           <div className={`status ${typingName || (!isGroup && online) ? 'live' : ''}`}>{statusText}</div>
         </div>
         <div className="call-head-actions">
-          <div className="menu-wrap">
-            <button className="icon-btn" title="More" aria-label="More" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)}>⋮</button>
-            {menuOpen && (
-              <div className="menu" role="menu">
-                {isGroup && <button role="menuitem" onClick={() => { setMenuOpen(false); setShowInfo(true); }}>Group info</button>}
-                {isSecret && <button role="menuitem" onClick={() => { setMenuOpen(false); setShowSafety(true); }}>🔒 Safety code</button>}
-                <button role="menuitem" onClick={() => { setMenuOpen(false); setSearchQ(''); setResults([]); setSearchOpen(true); }}>🔍 Search</button>
-                <button role="menuitem" onClick={exportChat}>⬇ Export chat</button>
-                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('mute'); }}>{chat.muted ? '🔔 Unmute notifications' : '🔕 Mute notifications'}</button>}
-                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('pin'); }}>{chat.pinned ? '📌 Unpin chat' : '📌 Pin chat'}</button>}
-                {canSetDisappear && <button role="menuitem" onClick={() => { setMenuOpen(false); setDisappearError(''); setShowDisappear(true); }}>⏳ Disappearing messages</button>}
-                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('rename'); }}>✏️ Edit name</button>}
-                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('archive'); }}>{chat.archived ? '📤 Unarchive' : '📥 Archive'}</button>}
-                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('lock'); }}>{chat.locked ? '🔓 Unlock chat' : '🔒 Lock chat'}</button>}
-                {!isGroup && <button role="menuitem" onClick={blockToggle}>{blocked ? 'Unblock' : 'Block'}</button>}
-                {!isGroup && <button role="menuitem" onClick={reportUser}>Report</button>}
-              </div>
-            )}
-          </div>
           {isGroup && !isSecret && (
             <>
-              <button className="icon-btn" title="Group voice call" aria-label="Group voice call" disabled={callBusy} onClick={() => onGroupCall && onGroupCall('audio')}>
-                ☎
-              </button>
               <button className="icon-btn" title="Group video call" aria-label="Group video call" disabled={callBusy} onClick={() => onGroupCall && onGroupCall('video')}>
-                ▣
+                <IconVideo size={22} />
+              </button>
+              <button className="icon-btn" title="Group voice call" aria-label="Group voice call" disabled={callBusy} onClick={() => onGroupCall && onGroupCall('audio')}>
+                <IconPhone size={21} />
               </button>
             </>
           )}
           {!isGroup && (
             <>
-              <button className="icon-btn" title="Voice call" aria-label="Voice call" disabled={callBusy} onClick={() => onCall && onCall('audio')}>
-                ☎
-              </button>
               <button className="icon-btn" title="Video call" aria-label="Video call" disabled={callBusy} onClick={() => onCall && onCall('video')}>
-                ▣
+                <IconVideo size={22} />
+              </button>
+              <button className="icon-btn" title="Voice call" aria-label="Voice call" disabled={callBusy} onClick={() => onCall && onCall('audio')}>
+                <IconPhone size={21} />
               </button>
             </>
           )}
+          <div className="menu-wrap">
+            <button className="icon-btn" title="More" aria-label="More" aria-haspopup="menu" aria-expanded={menuOpen} onClick={() => setMenuOpen((v) => !v)}><IconMore size={22} /></button>
+            {menuOpen && (
+              <div className="menu" role="menu">
+                {isGroup && <button role="menuitem" onClick={() => { setMenuOpen(false); setShowInfo(true); }}>Group info</button>}
+                {isSecret && <button role="menuitem" onClick={() => { setMenuOpen(false); setShowSafety(true); }}><I n="lock" /> Safety code</button>}
+                <button role="menuitem" onClick={() => { setMenuOpen(false); setSearchQ(''); setResults([]); setSearchOpen(true); }}><I n="search" /> Search</button>
+                <button role="menuitem" onClick={exportChat}>⬇ Export chat</button>
+                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('mute'); }}>{chat.muted ? 'Unmute notifications' : 'Mute notifications'}</button>}
+                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('pin'); }}>{chat.pinned ? 'Unpin chat' : 'Pin chat'}</button>}
+                {canSetDisappear && <button role="menuitem" onClick={() => { setMenuOpen(false); setDisappearError(''); setShowDisappear(true); }}><I n="timer" /> Disappearing messages</button>}
+                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('rename'); }}><I n="pencil" /> Edit name</button>}
+                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('archive'); }}>{chat.archived ? 'Unarchive' : 'Archive'}</button>}
+                {onChatAction && <button role="menuitem" onClick={() => { setMenuOpen(false); onChatAction('lock'); }}>{chat.locked ? 'Unlock chat' : 'Lock chat'}</button>}
+                {!isGroup && <button role="menuitem" onClick={blockToggle}>{blocked ? 'Unblock' : 'Block'}</button>}
+                {!isGroup && <button role="menuitem" onClick={reportUser}>Report</button>}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {isSecret && (
         <div className="secret-banner">
-          🔒 Secret chat: end-to-end encrypted, text only. Atomshade cannot read these messages.
-          {ctx?.first && ' Tap ⋮ → Safety code to check it matches your friend’s.'}
+          <I n="lock" /> Secret chat: end-to-end encrypted, text only. Atomshade cannot read these messages.
+          {ctx?.first && ' Tap ⋮ Safety code to check it matches your friend’s.'}
         </div>
       )}
       {isSecret && ctx?.pinStatus === 'changed' && (
         <div className="warn-banner">
-          ⚠️ {chat.title}’s safety code changed (they may have a new phone, or someone may be interfering). Check the new code with them in person or by a call.
+          <I n="alert" /> {chat.title}’s safety code changed (they may have a new phone, or someone may be interfering). Check the new code with them in person or by a call.
           <button type="button" onClick={() => setShowSafety(true)}>See code</button>
           <button type="button" onClick={acceptNewKey}>I trust the new code</button>
         </div>
@@ -1106,7 +1096,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
       {isSecret && ctxError && <div className="warn-banner">{ctxError}</div>}
       {disappear && (
         <div className="disappear-banner">
-          ⏳ New messages disappear after {disappearLabel(disappear)}.
+          <I n="timer" /> New messages disappear after {disappearLabel(disappear)}.
           {canSetDisappear && <button type="button" onClick={() => { setDisappearError(''); setShowDisappear(true); }}>Change</button>}
         </div>
       )}
@@ -1115,7 +1105,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
         <div className="search-panel">
           <div className="search-row">
             <input autoFocus type="search" placeholder={isSecret ? 'Search this secret chat (on this device)' : 'Search messages'} value={searchQ} onChange={(e) => setSearchQ(e.target.value)} aria-label="Search messages" maxLength={100} />
-            <button type="button" className="icon-btn" onClick={() => setSearchOpen(false)} aria-label="Close search">✕</button>
+            <button type="button" className="icon-btn" onClick={() => setSearchOpen(false)} aria-label="Close search"><I n="close" /></button>
           </div>
           {searchQ.trim().length >= 2 && (
             <div className="search-results" role="list">
@@ -1133,7 +1123,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
       )}
       {isGroup && liveCall && !callBusy && (
         <div className="disappear-banner live-call">
-          {liveCall.media === 'video' ? '📹' : '📞'} A group {liveCall.media} call is going on ({(liveCall.participants || []).length} in it).
+          {liveCall.media === 'video' ? '' : ''} A group {liveCall.media} call is going on ({(liveCall.participants || []).length} in it).
           <button type="button" onClick={() => onJoinGroupCall && onJoinGroupCall(liveCall.call_id, liveCall.media)}>Join</button>
         </div>
       )}
@@ -1162,7 +1152,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
                 {m.reply_to && messagesById[m.reply_to] && (
                   <div className="reply-preview"><strong>{messagesById[m.reply_to].sender_id === me.id ? 'You' : (memberNames[messagesById[m.reply_to].sender_id] || chat.title)}</strong><span>{previewOfMsg(messagesById[m.reply_to])}</span></div>
                 )}
-                {m.forwarded && !m.deleted_for_everyone && <div className="fwd-tag">↪ Forwarded</div>}
+                {m.forwarded && !m.deleted_for_everyone && <div className="fwd-tag"><I n="forward" /> Forwarded</div>}
                 {m.deleted_for_everyone ? (
                   <span className="deleted-message">This message was deleted</span>
                 ) : once ? (
@@ -1186,13 +1176,13 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
                 )}
                 {m.deliver_at && (
                   <div className="capsule-tag">
-                    {isPending(m) ? `⏳ Opens ${new Date(m.deliver_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : '⏳ Time capsule'}
+                    {isPending(m) ? `Opens ${new Date(m.deliver_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : 'Time capsule'}
                   </div>
                 )}
                 <div className="bubble-meta">
                   {m.edited_at && !m.deleted_for_everyone && <span className="edited-tag">edited</span>}
-                  {stars && stars.has(m.id) && <span title="Starred" aria-label="Starred">⭐</span>}
-                  {m.expires_at && <span title={`Disappears ${new Date(m.expires_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}`} aria-label="Disappearing message">⏳</span>}
+                  {stars && stars.has(m.id) && <span title="Starred" aria-label="Starred"><I n="star" /></span>}
+                  {m.expires_at && <span title={`Disappears ${new Date(m.expires_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}`} aria-label="Disappearing message"><I n="timer" /></span>}
                   <span>{clockTime(m.sort_at || m.created_at)}</span>
                   {mine && !isPending(m) && <Ticks message={m} isGroup={isGroup} />}
                 </div>
@@ -1214,11 +1204,11 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
         <div ref={bottomRef} />
       </div>
 
-      {editing && <div className="replying-bar"><div><strong>✏️ Editing message</strong><span>{textOf(editing)}</span></div><button type="button" onClick={cancelEdit} aria-label="Cancel edit">✕</button></div>}
-      {replyTo && <div className="replying-bar"><div><strong>Replying to {replyTo.sender_id === me.id ? 'yourself' : (memberNames[replyTo.sender_id] || chat.title)}</strong><span>{previewOfMsg(replyTo)}</span></div><button type="button" onClick={() => setReplyTo(null)} aria-label="Cancel reply">✕</button></div>}
+      {editing && <div className="replying-bar"><div><strong><I n="pencil" /> Editing message</strong><span>{textOf(editing)}</span></div><button type="button" onClick={cancelEdit} aria-label="Cancel edit"><I n="close" /></button></div>}
+      {replyTo && <div className="replying-bar"><div><strong>Replying to {replyTo.sender_id === me.id ? 'yourself' : (memberNames[replyTo.sender_id] || chat.title)}</strong><span>{previewOfMsg(replyTo)}</span></div><button type="button" onClick={() => setReplyTo(null)} aria-label="Cancel reply"><I n="close" /></button></div>}
       {capsuleAt !== null && (
         <div className="capsule-bar">
-          <span>⏳ Time capsule: opens for them at</span>
+          <span><I n="timer" /> Time capsule: opens for them at</span>
           <input
             type="datetime-local"
             value={capsuleAt}
@@ -1226,14 +1216,14 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
             max={localInput(new Date(Date.now() + 365 * 24 * 3600 * 1000))}
             onChange={(e) => setCapsuleAt(e.target.value)}
           />
-          <button type="button" onClick={() => setCapsuleAt(null)} aria-label="Cancel time capsule">✕</button>
+          <button type="button" onClick={() => setCapsuleAt(null)} aria-label="Cancel time capsule"><I n="close" /></button>
         </div>
       )}
       {showStickers && <StickerPanel uid={me.id} canSend={!isSecret} onClose={() => setShowStickers(false)} onEmoji={addEmoji} onSticker={sendSticker} onMine={sendMySticker} onGif={sendGif} />}
       {isSecret && keyState !== 'ready' ? (
         <div className="closed-note">
           {keyState === 'restore' || keyState === 'conflict' ? (
-            <button className="btn-primary" onClick={onNeedKeys}>🔒 Unlock secret chats on this device</button>
+            <button className="btn-primary" onClick={onNeedKeys}><I n="lock" /> Unlock secret chats on this device</button>
           ) : (
             'Secret chats are getting ready...'
           )}
@@ -1243,7 +1233,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
       ) : recording ? (
         <div className="composer recording">
           <button type="button" className="icon-btn" onClick={() => stopRecording(false)} aria-label="Cancel recording">
-            ✕
+            <I n="close" />
           </button>
           <div className="rec-info">
             <span className="rec-dot" />
@@ -1251,22 +1241,25 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
             <span className="rec-label">Recording</span>
           </div>
           <button type="button" className="send-btn" onClick={() => stopRecording(true)} aria-label="Send voice note">
-            ➤
+            <IconSend size={20} />
           </button>
         </div>
       ) : (
         <form className="composer" onSubmit={send}>
           {!isSecret && (
+            <span className="attach-wrap">
             <button
               type="button"
               className="icon-btn"
-              onClick={() => setAttachOpen(true)}
+              onClick={() => setAttachOpen((v) => !v)}
               disabled={uploading || !!editing}
               aria-label="Attach"
               aria-haspopup="menu"
             >
-              <ClipIcon />
+              <IconClip size={22} />
             </button>
+            {attachOpen && <AttachMenu onClose={() => setAttachOpen(false)} onPick={pickAttach} canLocation />}
+            </span>
           )}
           <button
             type="button"
@@ -1276,9 +1269,9 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
             aria-label="Time capsule"
             onClick={() => setCapsuleAt((v) => (v === null ? localInput(new Date(Date.now() + 60 * 60 * 1000)) : null))}
           >
-            ⏳
+            <IconTimer size={21} />
           </button>
-          <button type="button" className={`icon-btn ${showStickers ? 'on' : ''}`} onClick={() => setShowStickers((v) => !v)} disabled={!!editing} aria-label="Emoji, stickers and GIFs" aria-expanded={showStickers} title="Emoji and stickers">😊</button>
+          <button type="button" className={`icon-btn ${showStickers ? 'on' : ''}`} onClick={() => setShowStickers((v) => !v)} disabled={!!editing} aria-label="Emoji, stickers and GIFs" aria-expanded={showStickers} title="Emoji and stickers"><IconSmile size={22} /></button>
           <input ref={fileRef} type="file" accept="image/*,video/*" hidden onChange={onPickPhoto} />
           <input ref={docRef} type="file" accept={DOC_ACCEPT} hidden onChange={onPickDoc} />
           <input
@@ -1290,7 +1283,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
           />
           {text.trim() || isSecret || editing ? (
             <button className="send-btn" aria-label={editing ? 'Save edit' : 'Send'} disabled={(isSecret || !!editing) && (!text.trim() || ctx?.pinStatus === 'changed')}>
-              ➤
+              <IconSend size={20} />
             </button>
           ) : (
             <button
@@ -1300,13 +1293,12 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
               disabled={uploading}
               aria-label="Record a voice note"
             >
-              <MicIcon />
+              <IconMic size={22} />
             </button>
           )}
         </form>
       )}
 
-      {attachOpen && <AttachMenu onClose={() => setAttachOpen(false)} onPick={pickAttach} canLocation />}
       {showPoll && <PollModal onClose={() => setShowPoll(false)} onSend={sendPoll} />}
       {forwardMsg && <ForwardModal chats={forwardTargets || []} onClose={() => setForwardMsg(null)} onSend={doForward} />}
 
@@ -1325,7 +1317,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
       {editFile && (
         <MediaEditor
           file={editFile}
-          doneLabel="Send ➤"
+          doneLabel="Send "
           onCancel={() => { onceNext.current = false; setEditFile(null); }}
           onError={() => {
             const f = editFile;
@@ -1350,7 +1342,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
       {showDisappear && (
         <div className="modal-bg" onClick={() => setShowDisappear(false)}>
           <div className="modal" role="dialog" aria-modal="true" aria-label="Disappearing messages" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head"><h3>⏳ Disappearing messages</h3><button className="icon-btn" onClick={() => setShowDisappear(false)} aria-label="Close">✕</button></div>
+            <div className="modal-head"><h3><I n="timer" /> Disappearing messages</h3><button className="icon-btn" onClick={() => setShowDisappear(false)} aria-label="Close"><I n="close" /></button></div>
             <p className="modal-sub">New messages in this chat will disappear for everyone after the time you pick. Messages already sent are not affected.</p>
             <div className="radio-list" role="radiogroup" aria-label="Disappear after">
               {DISAPPEAR_CHOICES.map(([v, label]) => (
@@ -1368,7 +1360,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
       {showSafety && ctx && (
         <div className="modal-bg" onClick={() => setShowSafety(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head"><h3>🔒 Safety code</h3><button className="icon-btn" onClick={() => setShowSafety(false)} aria-label="Close">✕</button></div>
+            <div className="modal-head"><h3><I n="lock" /> Safety code</h3><button className="icon-btn" onClick={() => setShowSafety(false)} aria-label="Close"><I n="close" /></button></div>
             <p className="modal-sub">If {chat.title} sees exactly the same numbers on their phone, nobody is listening in between you. Compare them in person or on a call.</p>
             <div className="safety-code">{ctx.code}</div>
           </div>

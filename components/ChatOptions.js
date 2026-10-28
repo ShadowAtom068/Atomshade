@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { hasPin, setPin, validPin, verifyPin } from '../lib/pinlock';
 
@@ -27,11 +28,11 @@ export function ChatContextMenu({ chat, x, y, onPick, onClose }) {
     <div className="ctx-bg" onClick={onClose} onContextMenu={(e) => { e.preventDefault(); onClose(); }}>
       <div ref={ref} className="ctx-menu" role="menu" style={pos} onClick={(e) => e.stopPropagation()}>
         <div className="ctx-title">{chat.title}</div>
-        <button role="menuitem" onClick={() => onPick('rename')}>✏️ Edit name</button>
-        <button role="menuitem" onClick={() => onPick('archive')}>{chat.archived ? '📤 Unarchive' : '📥 Archive'}</button>
-        <button role="menuitem" onClick={() => onPick('pin')}>{chat.pinned ? '📌 Unpin chat' : '📌 Pin chat'}</button>
-        <button role="menuitem" onClick={() => onPick('mute')}>{chat.muted ? '🔔 Unmute notifications' : '🔕 Mute notifications'}</button>
-        <button role="menuitem" onClick={() => onPick('lock')}>{chat.locked ? '🔓 Unlock chat' : '🔒 Lock chat'}</button>
+        <button role="menuitem" onClick={() => onPick('rename')}><I n="pencil" /> Edit name</button>
+        <button role="menuitem" onClick={() => onPick('archive')}>{chat.archived ? 'Unarchive' : 'Archive'}</button>
+        <button role="menuitem" onClick={() => onPick('pin')}>{chat.pinned ? 'Unpin chat' : 'Pin chat'}</button>
+        <button role="menuitem" onClick={() => onPick('mute')}>{chat.muted ? 'Unmute notifications' : 'Mute notifications'}</button>
+        <button role="menuitem" onClick={() => onPick('lock')}>{chat.locked ? 'Unlock chat' : 'Lock chat'}</button>
       </div>
     </div>
   );
@@ -47,7 +48,7 @@ export function MuteModal({ chat, onPick, onClose }) {
   return (
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" role="dialog" aria-modal="true" aria-label="Mute notifications" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-head"><h3>🔕 Mute {chat.title}</h3><button className="icon-btn" onClick={onClose} aria-label="Close">✕</button></div>
+        <div className="modal-head"><h3><I n="bellOff" /> Mute {chat.title}</h3><button className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button></div>
         <p className="modal-sub">You will not get notifications from this chat. Calls still ring. Messages still arrive.</p>
         <div className="radio-list">
           {choices.map(([h, label]) => (
@@ -75,7 +76,7 @@ export function RenameModal({ chat, onSave, onClose }) {
       <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={save}>
         <div className="modal-head">
           <h3>Edit name</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
         </div>
         <p className="modal-sub">
           {isGroup ? 'This name is only for you. Group admins can change it for everyone in Group info.' : `This name is only for you. ${chat.real_title || 'They'} will not see it.`}
@@ -128,7 +129,7 @@ export function PinModal({ userId, mode, onDone, onClose }) {
       <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
         <div className="modal-head">
           <h3>{setting ? 'Create a lock PIN' : 'Locked chats'}</h3>
-          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">✕</button>
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close"><I n="close" /></button>
         </div>
         <p className="modal-sub">
           {setting

@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatTime } from '../lib/format';
@@ -64,7 +65,7 @@ export default function CallsPanel({ me, onCall, busy, refreshKey }) {
       <div className="list-empty">
         No calls yet.
         <br />
-        Open a chat and tap ☎ to call a friend.
+        Open a chat and tap <I n="phone" /> to call a friend.
       </div>
     );
   }
@@ -83,7 +84,7 @@ export default function CallsPanel({ me, onCall, busy, refreshKey }) {
         else if (missed) detail = 'Missed';
         else if (declined) detail = outgoing ? 'Declined' : 'You declined';
         else detail = outgoing ? 'No answer' : 'Missed';
-        const arrow = outgoing ? '↗' : '↙';
+        const arrow = outgoing ? '' : '';
         return (
           <div key={c.id} className="chat-item static">
             <Avatar name={name} seed={otherId} />
@@ -103,7 +104,7 @@ export default function CallsPanel({ me, onCall, busy, refreshKey }) {
               aria-label={`Call ${name} back`}
               onClick={() => onCall({ other_id: otherId, title: name }, c.media)}
             >
-              {c.media === 'video' ? '▣' : '☎'}
+              {c.media === 'video' ? '' : ''}
             </button>
           </div>
         );

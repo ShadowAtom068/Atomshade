@@ -1,5 +1,6 @@
 'use client';
 
+import { I } from './Icons';
 import NotifyButton from './NotifyButton';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
@@ -89,7 +90,7 @@ export default function ProfileEdit({ me, people = [], keyState, onSaved, onClos
         <div className="modal-head">
           <h3>My profile</h3>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="Close">
-            ✕
+            <I n="close" />
           </button>
         </div>
         <div className="account-box">
@@ -136,20 +137,20 @@ export default function ProfileEdit({ me, people = [], keyState, onSaved, onClos
             ))}
             {vibe && (
               <button type="button" disabled={vibeBusy} className="vibe-chip" onClick={() => pickVibe('')}>
-                ✕ Clear
+                <I n="close" /> Clear
               </button>
             )}
           </div>
         </div>
 
         <div className="section">
-          <h4>✦ Inner Orbit</h4>
+          <h4>Inner Orbit</h4>
           <p className="hint">Choose the few people who can see your private status updates.</p>
           <button type="button" className="btn-ghost" onClick={() => setShowOrbit(true)}>Choose people</button>
         </div>
 
         <div className="section">
-          <h4>🔒 Secret chat backup</h4>
+          <h4><I n="lock" /> Secret chat backup</h4>
           {keyState !== 'ready' ? (
             <p className="hint">Secret chats are not ready on this device yet.</p>
           ) : (
