@@ -1,0 +1,5 @@
+Copyright (c) 2026 Atomshade. All rights reserved.
+
+This software, its name, logo, design and source code are proprietary and confidential.
+No licence is granted to copy, modify, host, redistribute, resell or build a competing
+product from any part of it without written permission from the owner.

@@ -1,0 +1,11 @@
+{
+  "appId": "com.atomshade.app",
+  "appName": "Atomshade",
+  "webDir": "capacitor-www",
+  "server": {
+    "url": "https://YOUR-LINK.vercel.app",
+    "cleartext": false,
+    "allowNavigation": ["*.supabase.co", "accounts.google.com"]
+  },
+  "android": { "allowMixedContent": false }
+}
