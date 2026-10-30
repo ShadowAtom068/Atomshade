@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { formatTime } from '../lib/format';
 import Avatar from './Avatar';
-import { IconArchive, IconBellOff, IconChat, IconGear, IconLock, IconLogout, IconNewChat, IconPeople, IconPhone, IconPin, IconShade, IconStatus, IconBack } from './Icons';
+import { IconUsersCog as IconAdmin, IconArchive, IconBellOff, IconChat, IconGear, IconLock, IconLogout, IconNewChat, IconPeople, IconPhone, IconPin, IconShade, IconStatus, IconBack } from './Icons';
 import AtomLogo from './AtomLogo';
 import ChatWindow from './ChatWindow';
 import NewChat from './NewChat';
@@ -28,6 +28,8 @@ import { hasPin } from '../lib/pinlock';
 import NotifyButton from './NotifyButton';
 import SettingsPanel from './SettingsPanel';
 import StarredPanel from './StarredPanel';
+import AdminPanel from './AdminPanel';
+import BannedScreen from './BannedScreen';
 
 // Order of the main sections. Swiping left/right moves along this list, like WhatsApp.
 const TABS = [
@@ -147,6 +149,10 @@ export default function ChatShell({ me, onProfileChange }) {
   const [showKeyGate, setShowKeyGate] = useState(false);
   const [shadeUnread, setShadeUnread] = useState(0);
   const [callsRefresh, setCallsRefresh] = useState(0);
+  const [ban, setBan] = useState(null); // { reason } when an admin has suspended this account
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [openReports, setOpenReports] = useState(0);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [online, setOnline] = useState(new Set());
   const [search, setSearch] = useState('');
   const [activeCall, setActiveCall] = useState(null); // { callId, role, media, peer }
@@ -492,6 +498,26 @@ export default function ChatShell({ me, onProfileChange }) {
     if (c.locked && hasPin(me.id) && !lockedOpen) setPinAsk({ mode: 'enter', then: () => { setLockedOpen(true); go(); } });
     else go();
   }
+  // Suspended? Admin? Checked when the app opens, when you come back to it, and every minute.
+  const checkAccount = useCallback(async () => {
+    const b = await supabase.rpc('my_ban');
+    if (!b.error) setBan(b.data && b.data.banned ? { reason: b.data.reason || '' } : null);
+    const a = await supabase.rpc('is_admin');
+    const admin = !a.error && a.data === true;
+    setIsAdmin(admin);
+    if (admin) {
+      const c = await supabase.rpc('admin_open_count');
+      if (!c.error && typeof c.data === 'number') setOpenReports(c.data);
+    } else setOpenReports(0);
+  }, []);
+  useEffect(() => {
+    checkAccount();
+    const timer = setInterval(checkAccount, 60000);
+    const onVis = () => document.visibilityState === 'visible' && checkAccount();
+    document.addEventListener('visibilitychange', onVis);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVis); };
+  }, [checkAccount]);
+
   function logOut() {
     if (confirm(`Log out of Atomshade${me.email ? ' (' + me.email + ')' : ''}?`)) {
       disablePush(false).finally(() => supabase.auth.signOut());
@@ -528,6 +554,8 @@ export default function ChatShell({ me, onProfileChange }) {
     },
   });
 
+  if (ban) return <BannedScreen reason={ban.reason} onLogout={() => supabase.auth.signOut()} />;
+
   return (
     <div className={`app ${active ? 'chat-open' : ''}`}>
       <aside className="sidebar" {...swipeProps}>
@@ -540,6 +568,12 @@ export default function ChatShell({ me, onProfileChange }) {
             <button className="icon-btn" title="New chat or group" aria-label="New chat or group" onClick={() => setShowNew(true)}>
               <IconNewChat size={21} />
             </button>
+            {isAdmin && (
+              <button className="icon-btn admin-btn" title="Admin: reports and bans" aria-label={`Admin, ${openReports} open reports`} onClick={() => setShowAdmin(true)}>
+                <IconAdmin size={21} />
+                {openReports > 0 && <span className="tab-badge">{openReports > 99 ? '99+' : openReports}</span>}
+              </button>
+            )}
             <button className="icon-btn" title="Settings" aria-label="Settings" onClick={() => setShowSettings(true)}>
               <IconGear size={21} />
             </button>
@@ -688,6 +722,7 @@ export default function ChatShell({ me, onProfileChange }) {
         {active ? (
           <ChatWindow
             key={active.conversation_id}
+            callsRefresh={callsRefresh}
             me={me}
             chat={activeChat}
             onChatAction={(a) => pick(a, activeNow ? toActive(activeNow) : active)}
@@ -784,6 +819,7 @@ export default function ChatShell({ me, onProfileChange }) {
           onLogout={logOut}
         />
       )}
+      {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} onChanged={checkAccount} />}
       {showStarred && <StarredPanel me={me} onOpen={openChatById} onClose={() => setShowStarred(false)} />}
 
       {showProfile && (

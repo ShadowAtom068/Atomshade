@@ -241,7 +241,21 @@ export const IconInfo = make(
 );
 export const IconCheckCheck = make(<path d="m1.5 12.5 5 5L16 7M10 16.500l1 1L21.5 7" />);
 
+export const IconEye = make(
+  <>
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </>
+);
+export const IconUsersCog = make(
+  <>
+    <path d="M12 3 5 5.8v5.6c0 4.3 2.9 8 7 9.6 4.1-1.6 7-5.3 7-9.6V5.8L12 3Z" />
+    <path d="m9 12 2 2 4-4" />
+  </>
+);
+
 const NAMES = {
+  eye: IconEye, adminShield: IconUsersCog,
   close: IconClose, lock: IconLock, unlock: IconUnlock, timer: IconTimer, camera: IconCamera, video: IconVideo,
   phone: IconPhone, plus: IconPlus, volumeoff: IconVolumeOff, volume: IconVolume, bell: IconBell, bellOff: IconBellOff,
   shade: IconShade, ban: IconBan, pencil: IconPencil, pin: IconPin, star: IconStar, send: IconSend, back: IconBack,

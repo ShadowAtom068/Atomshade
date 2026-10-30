@@ -51,7 +51,48 @@ function Ticks({ message, isGroup }) {
   return <span className="tick"><I n="check" /></span>;
 }
 
-export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, callBusy, keyState, onNeedKeys, onChatAction, onChanged, forwardTargets, onGroupCall, onJoinGroupCall }) {
+function callDuration(c) {
+  if (!c.answered_at) return '';
+  const end = c.ended_at ? Date.parse(c.ended_at) : Date.now();
+  const sec = Math.max(0, Math.round((end - Date.parse(c.answered_at)) / 1000));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// One line in the chat for a finished call: who called, what happened, how long it lasted.
+function CallRow({ c, me, busy, onCall }) {
+  const out = c.caller_id === me;
+  const kindWord = c.media === 'video' ? 'video call' : 'voice call';
+  const cap = kindWord.charAt(0).toUpperCase() + kindWord.slice(1);
+  let text;
+  let tone = '';
+  let sub = '';
+  if (c.status === 'accepted' || c.status === 'ended') {
+    if (c.answered_at) { text = cap; sub = callDuration(c); } else { text = out ? `Cancelled ${kindWord}` : `Missed ${kindWord}`; tone = out ? '' : 'bad'; }
+  } else if (c.status === 'declined') {
+    text = out ? `${cap} declined` : `You declined a ${kindWord}`;
+  } else if (c.status === 'cancelled') {
+    text = out ? `Cancelled ${kindWord}` : `Missed ${kindWord}`;
+    tone = out ? '' : 'bad';
+  } else { // missed
+    text = out ? `No answer (${kindWord})` : `Missed ${kindWord}`;
+    tone = out ? '' : 'bad';
+  }
+  const time = clockTime(c.created_at);
+  return (
+    <div className="call-row-wrap">
+      <button type="button" className={`call-row ${tone}`} disabled={busy || !onCall} onClick={() => onCall && onCall(c.media)} title={`Call back (${kindWord})`}>
+        <span className="call-row-ico"><I n={c.media === 'video' ? 'video' : (out ? 'callOut' : 'callIn')} s={16} /></span>
+        <span className="call-row-text">{text}{sub ? <b> · {sub}</b> : null}</span>
+        <span className="call-row-time">{time}</span>
+      </button>
+    </div>
+  );
+}
+
+export default function ChatWindow({ callsRefresh = 0, me, chat, online, onBack, onLeft, onCall, callBusy, keyState, onNeedKeys, onChatAction, onChanged, forwardTargets, onGroupCall, onJoinGroupCall }) {
   const convId = chat.conversation_id;
   const isGroup = chat.is_group;
   const isSecret = !!chat.secret;
@@ -74,6 +115,7 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
   const [plain, setPlain] = useState({}); // decrypted text by message id (null = could not open)
   const [showSafety, setShowSafety] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [callLog, setCallLog] = useState([]); // earlier calls with this person, shown inside the chat
   const [blocked, setBlocked] = useState(false);
   const [, forceTick] = useState(0);
   const prefs = usePrefs();
@@ -1008,6 +1050,42 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
 
   const visibleMessages = messages.filter((m) => !isExpired(m));
 
+  // Calls with this person appear in the chat like messages (WhatsApp style), oldest to newest.
+  const otherId = !isGroup ? chat.other_id : null;
+  const loadCalls = useCallback(async () => {
+    if (!otherId) return;
+    const { data, error } = await supabase
+      .from('calls')
+      .select('id, caller_id, callee_id, media, status, created_at, answered_at, ended_at')
+      .or(`and(caller_id.eq.${me.id},callee_id.eq.${otherId}),and(caller_id.eq.${otherId},callee_id.eq.${me.id})`)
+      .order('created_at', { ascending: false })
+      .limit(60);
+    if (!error && Array.isArray(data)) setCallLog(data);
+  }, [me.id, otherId]);
+  useEffect(() => {
+    loadCalls();
+    if (!otherId) return undefined;
+    let t;
+    const soon = () => { clearTimeout(t); t = setTimeout(loadCalls, 400); };
+    const channel = supabase
+      .channel(`chat-calls-${convId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'calls', filter: `caller_id=eq.${me.id}` }, soon)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'calls', filter: `callee_id=eq.${me.id}` }, soon)
+      .subscribe();
+    return () => { clearTimeout(t); supabase.removeChannel(channel); };
+  }, [loadCalls, callsRefresh, otherId, me.id, convId]);
+
+  const timeline = (() => {
+    const items = visibleMessages.map((m) => ({ ...m, _t: Date.parse(m.sort_at || m.created_at) || 0 }));
+    for (const c of callLog) {
+      const t = Date.parse(c.created_at) || 0;
+      const stale = c.status === 'ringing' && Date.now() - t > 2 * 60 * 1000;
+      if (c.status === 'ringing' && !stale) continue; // still ringing: not a record yet
+      items.push({ _call: true, id: `call-${c.id}`, call: stale ? { ...c, status: 'missed' } : c, _t: t });
+    }
+    return items.sort((a, b) => a._t - b._t);
+  })();
+
   const statusText = typingName
     ? isGroup
       ? `${typingName} is typing...`
@@ -1135,9 +1213,11 @@ export default function ChatWindow({ me, chat, online, onBack, onLeft, onCall, c
       )}
 
       <div className="messages">
-        {visibleMessages.map((m, i) => {
+        {timeline.map((m, i) => {
+          if (m._call) return <CallRow key={m.id} c={m.call} me={me.id} busy={callBusy} onCall={onCall} />;
           const mine = m.sender_id === me.id;
-          const prev = visibleMessages[i - 1];
+          let prev = null;
+          for (let k = i - 1; k >= 0; k -= 1) { if (!timeline[k]._call) { prev = timeline[k]; break; } }
           const showName = isGroup && !mine && (!prev || prev.sender_id !== m.sender_id);
           const once = !!m.view_once;
           const isMedia = !once && (m.kind === 'image' || m.kind === 'audio' || m.kind === 'video');

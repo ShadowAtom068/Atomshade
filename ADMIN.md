@@ -1,4 +1,14 @@
-# Atomshade admin guide (Supabase dashboard)
+# Atomshade admin guide
+
+## In the app (easiest)
+If your account is an admin (the owner is set up as admin by `supabase/update-calls-views-bans.sql`), you see a **shield button** at the top of the chat list, with a number when reports are waiting. Tap it to:
+- read each report (who reported whom, the reason, and the reported message when there is one),
+- **Ban account** (the person is logged out, cannot log in again and cannot send anything; they see a "suspended" screen with your reason),
+- **Unban**, **Mark reviewed** or **Dismiss**.
+
+To make someone else an admin, run in Supabase -> SQL Editor: `insert into public.admins (user_id) select id from public.profiles where email = 'their@email.com';`
+
+## In the Supabase dashboard (alternative)
 
 You do not need a separate admin website. Everything below is done in Supabase -> SQL Editor (only you can open it).
 

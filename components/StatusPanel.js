@@ -335,8 +335,36 @@ function StatusViewer({ group, start, isMine, onClose, onDelete }) {
   const [i, setI] = useState(start);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [viewers, setViewers] = useState([]); // people who looked at MY current status
+  const [showViewers, setShowViewers] = useState(false);
+  const marked = useRef(new Set());
   const items = group.items;
   const cur = items[Math.min(i, items.length - 1)];
+
+  // Someone else's status: tell the poster I looked (once). My own status: load who looked.
+  useEffect(() => {
+    if (!cur) return undefined;
+    if (!isMine) {
+      if (!marked.current.has(cur.id)) {
+        marked.current.add(cur.id);
+        supabase.from('status_views').upsert({ status_id: cur.id }, { onConflict: 'status_id,viewer_id', ignoreDuplicates: true }).then(() => {}, () => {});
+      }
+      return undefined;
+    }
+    let alive = true;
+    const loadViewers = async () => {
+      const { data, error } = await supabase
+        .from('status_views')
+        .select('viewer_id, viewed_at, profiles(name)')
+        .eq('status_id', cur.id)
+        .order('viewed_at', { ascending: false });
+      if (alive && !error && Array.isArray(data)) setViewers(data);
+    };
+    setViewers([]);
+    loadViewers();
+    const timer = setInterval(loadViewers, 8000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [cur?.id, isMine]);
 
   const next = () => (i < items.length - 1 ? setI(i + 1) : onClose());
   const prev = () => setI(Math.max(0, i - 1));
@@ -347,7 +375,7 @@ function StatusViewer({ group, start, isMine, onClose, onDelete }) {
 
   // Photos and text last 6 seconds. Videos advance when they end.
   useEffect(() => {
-    if (!cur || cur.kind === 'video' || paused) return undefined;
+    if (!cur || cur.kind === 'video' || paused || showViewers) return undefined;
     const started = Date.now() - progress * 6000;
     const t = setInterval(() => {
       const p = Math.min(1, (Date.now() - started) / 6000);
@@ -356,7 +384,7 @@ function StatusViewer({ group, start, isMine, onClose, onDelete }) {
     }, 100);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [i, paused, cur?.id]);
+  }, [i, paused, showViewers, cur?.id]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -392,6 +420,29 @@ function StatusViewer({ group, start, isMine, onClose, onDelete }) {
         <button className="story-tap left" aria-label="Previous" onClick={prev} />
         <button className="story-tap right" aria-label="Next" onClick={next} />
       </div>
+      {isMine && (
+        <button type="button" className="story-views" onClick={() => setShowViewers(true)} aria-label={`${viewers.length} views`}>
+          <I n="eye" s={18} /> {viewers.length}
+        </button>
+      )}
+      {isMine && showViewers && (
+        <div className="viewers-sheet" role="dialog" aria-modal="true" aria-label="Viewed by">
+          <div className="viewers-head">
+            <strong><I n="eye" s={18} /> Viewed by {viewers.length}</strong>
+            <button type="button" className="icon-btn" onClick={() => setShowViewers(false)} aria-label="Close"><I n="close" /></button>
+          </div>
+          <div className="viewers-list">
+            {viewers.length === 0 && <p className="status-empty">No views yet. They appear here when people open your status.</p>}
+            {viewers.map((v) => (
+              <div key={v.viewer_id} className="viewer-row">
+                <Avatar name={v.profiles?.name || 'Someone'} seed={v.viewer_id} small />
+                <span className="viewer-name">{v.profiles?.name || 'Atomshade user'}</span>
+                <small>{formatTime(v.viewed_at)}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
