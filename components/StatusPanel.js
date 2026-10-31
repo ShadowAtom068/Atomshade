@@ -53,7 +53,7 @@ export default function StatusPanel({ me, people = [], onClose, embedded = false
   async function load() {
     const { data, error: loadError } = await supabase
       .from('statuses')
-      .select('id, user_id, body, kind, media_path, background, audience, created_at, expires_at, audio_path, audio_start, audio_title, profiles(name)')
+      .select('id, user_id, body, kind, media_path, background, audience, created_at, expires_at, audio_path, audio_start, audio_title, profiles!statuses_user_id_fkey(name)')
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });
     if (loadError) { setError(loadError.message); return; }
